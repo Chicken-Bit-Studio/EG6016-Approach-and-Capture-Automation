@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Jobs;
+using Unity.Collections;
 using UnityEditor.EditorTools;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +19,7 @@ public class LiDARDataCollection : MonoBehaviour
     public bool ignoreParentColliders = true;
     [Tooltip("The minimum acceptable fps of the simulation. Used to advance frames in the PerformLiDARScan coroutine.")]
     [Range(8f, 60f)]
-    public float minSimulationFPS = 20f;    //is it actually minimum fps or exact fps?
+    public float minimumSimulationFPS = 20f;    //is it actually minimum fps or exact fps?
 
     [Header("LiDAR Scan Settings")]
     [Tooltip("Half of the vertical field of view in degrees.")]
@@ -30,7 +32,7 @@ public class LiDARDataCollection : MonoBehaviour
     [Range(0.5f, 50f)]
     public float maxDistance = 20f;
     [ReadOnly]
-    public float scanProgress = 0f; // Value from 0 to 1 indicating the progress of the current scan
+    public float recalibrationProgress = 0f; // Value from 0 to 1 indicating the progress of the LiDAR setup phase
 
     [Header("LiDAR image generation Settings")]
     public bool generateLiDARImage = true;
@@ -39,7 +41,6 @@ public class LiDARDataCollection : MonoBehaviour
     public enum ImageSizeSettings { Size512x512, Size1024x1024 }
     [Tooltip("Resolution of the generated LiDAR image.")]
     public ImageSizeSettings imageSize = ImageSizeSettings.Size512x512;
-    private Image uiImageComponent_LiveScan;
     private Image uiImageComponent_CompleteScan;
 
     [Header("Debug Settings")]
@@ -49,8 +50,11 @@ public class LiDARDataCollection : MonoBehaviour
     public float[,] pointArray;
 
     // Internal private variables
-    private float timeSinceLastImageUpdate_LiveScan = 0f;
+    private float timeOfPreviousImageUpdate = 0f;
+    private float timeOfLatestImageUpdaten = 0f;
     private Coroutine lidarCoroutine;
+    private NativeArray<RaycastCommand> raycastCommands;
+    private NativeArray<RaycastHit> raycastHits;
 
     // Track the Inspector parameters for changes over time
     private float lastVerticalHalfFOV;
@@ -73,12 +77,11 @@ public class LiDARDataCollection : MonoBehaviour
         }
         try
         {
-            uiImageComponent_LiveScan = GameObject.Find("LiDARImageDisplay_LiveScan").GetComponent<Image>();
             uiImageComponent_CompleteScan = GameObject.Find("LiDARImageDisplay_CompleteScan").GetComponent<Image>();
         }
         catch
         {
-            Debug.LogError("UI Image component for LiDAR image display not found. Please ensure there are GameObjects named 'LiDARImageDisplay_LiveScan' and 'LiDARImageDisplay_CompleteScan' with an Image component in the scene.");
+            Debug.LogError("UI Image component for LiDAR image display not found. Please ensure there is a gameobject named 'LiDARImageDisplay_CompleteScan' with an Image component in the scene.");
             generateLiDARImage = false;
         }
         // Initialize "last known" parameter values
@@ -98,113 +101,151 @@ public class LiDARDataCollection : MonoBehaviour
             if (verticalHalfFOV != lastVerticalHalfFOV || raysPerDegree != lastRaysPerDegree || maxDistance != lastMaxDistance)
             {
                 StopCoroutine(lidarCoroutine);
+                raycastCommands.Dispose();
+                raycastHits.Dispose();
                 lidarCoroutine = StartCoroutine(PerformLiDARScan());
                 GetLastVariables();
             }
-        }
-        // (Optional) Display the point array as it currently is in an image in the game view
-        timeSinceLastImageUpdate_LiveScan += Time.deltaTime;
-        if (generateLiDARImage && timeSinceLastImageUpdate_LiveScan >= 1f / imageRefreshRate)
-        {
-            //StartCoroutine(UpdateLiDARImage());
-            UpdateLiDARImage_LiveScan();
-            timeSinceLastImageUpdate_LiveScan = 0f;
         }
     }
 
     public IEnumerator PerformLiDARScan()
     {
-        // SETUP PHASE
-        Debug.Log("LiDAR scan setup started.");
-        // Constant definitions. If parameters are changed during runtime, this coroutine should be restarted.
+        // SETUP PHASE - Ran when the coroutine starts or when parameters change
         // Note:    A generated point array will be square, so only one dimension is needed.
         //          Let 'i' be the horizontal index and 'j' be the vertical index.
         int pointArraySize = Mathf.CeilToInt(verticalHalfFOV * 2 * raysPerDegree);
         pointArray = new float[pointArraySize, pointArraySize];
-        float startDeg = -verticalHalfFOV;
-        float stepDeg = 1f / raysPerDegree;
+        int totalRays = pointArraySize * pointArraySize;
+        raycastCommands = new NativeArray<RaycastCommand>(totalRays, Allocator.Persistent);
+        raycastHits = new NativeArray<RaycastHit>(totalRays, Allocator.Persistent);
         // Time management variables
-        float frameTimeLimit = 1f / minSimulationFPS;
+        float frameTimeLimit = 1f / minimumSimulationFPS;
         float timeElapsedThisFrame = 0f;
-        //LayerMask layerMask = ignoreParentColliders ? ~(1 << emitter.gameObject.layer) : ~0;
-        // Collect a sibling array containing all raycast directions to optimize performance, as these do not change between scans
+        bool clockYielded = false;
+        // Ray directions won't change between scans unless LiDAR parameters do, so precompute them once
         Vector3[,] rayDirections = new Vector3[pointArraySize, pointArraySize];
-        for (int i = 0; i < pointArraySize; i++)
-        {
-            // Precompute vertical angle
-            float verticalAngle_Deg = startDeg + (i * stepDeg);
-            for (int j = 0; j < pointArraySize; j++)
-            {
-                // Precompute horizontal angle
-                float horizontalAngle_Deg = startDeg + (j * stepDeg);
-                Quaternion rotation = Quaternion.Euler(verticalAngle_Deg, 0, horizontalAngle_Deg);
-                rayDirections[i, j] = rotation * emitter.up;    // Note: !! This might rely on emitter.up being constant during the simulation
-                // Yield control if frame time limit is reached during setup
-                yield return YieldIfFrameTimeExceeded();
-            }
-        }
+        yield return PrecomputeRayDirections();
 
-        // LOOP PHASE
-        Debug.Log("LiDAR scan loop started.");
+        // LOOP PHASE - Main scanning loop
         while (true)
         {
-            for (int i = 0; i < pointArraySize; i++)
+            // Allocate a new batch of raycast commands
+            JobHandle rayJobHandle = ScheduleRaycastJob();
+            // Wait for the raycasting job to complete
+            while (!rayJobHandle.IsCompleted)
             {
-                for (int j = 0; j < pointArraySize; j++)
-                {
-                    // Cast the ray and visualize if needed
-                    Vector3 rayDirection = rayDirections[i, j];// * emitter.up;
-                    Ray ray = new Ray(emitter.position, rayDirection);
-                    if (visualizeRaysInSceneView)
-                    {
-                        Debug.DrawRay(emitter.position, rayDirection * maxDistance, Color.green, 1f / minSimulationFPS);
-                    }
-                    // Record the distance to the first hit object or max distance
-                    if (Physics.Raycast(ray, out RaycastHit hitInfo, maxDistance))
-                    {
-                        pointArray[i, j] = hitInfo.distance;
-                    }
-                    else
-                    {
-                        pointArray[i, j] = float.PositiveInfinity;
-                    }
-                    // Yield control if frame time limit is reached during setup
-                    yield return YieldIfFrameTimeExceeded();
-                }
-                // Update scan progress
-                scanProgress = (float)(i + 1) / pointArraySize;
+                yield return null;
             }
-            // (Optional) Display the point array when it is completed as an image in the game view
+            // Finalize the job
+            rayJobHandle.Complete();
+            // Retrieve the results and assign distances to the point array
+            for (int i = 0; i < totalRays; i++)
+            {
+                int row = i / pointArraySize;
+                int col = i % pointArraySize;
+                if (raycastHits[i].collider != null)
+                {
+                    pointArray[row, col] = raycastHits[i].distance;
+                }
+                else
+                {
+                    pointArray[row, col] = float.PositiveInfinity;
+                }
+            }
+            // The job is done, so we update the scan image
             if (generateLiDARImage)
             {
-                UpdateLiDARImage_CompleteScan(pointArray);
+                UpdateLiDARImageIfDue(pointArray);
             }
         }
-
-        // Time management helper subroutine
+    
+        IEnumerator PrecomputeRayDirections()
+        {
+            // FOV/ray-density values
+            int index = 0;
+            float startDeg = -verticalHalfFOV;
+            float stepDeg = 1f / raysPerDegree;
+            for (int i = 0; i < pointArraySize; i++)
+            {
+                // Precompute vertical angle
+                float verticalAngle_Deg = startDeg + (i * stepDeg);
+                for (int j = 0; j < pointArraySize; j++)
+                {
+                    // Precompute horizontal angle
+                    float horizontalAngle_Deg = startDeg + (j * stepDeg);
+                    Quaternion rotation = Quaternion.Euler(verticalAngle_Deg, 0, horizontalAngle_Deg);
+                    rayDirections[i, j] = rotation * emitter.up;    // Note: !! This might rely on emitter.up being constant during the simulation
+                    index++;
+                    // Yield control if frame time limit is reached during setup
+                    yield return YieldIfFrameTimeExceeded();
+                    if (clockYielded)
+                    {
+                        recalibrationProgress = ((float)index) / totalRays;
+                    }
+                }
+            }
+            // Debugging
+            int count = pointArraySize * pointArraySize;
+            long approxBytes = count * 12L;
+            float approxMB = approxBytes / (1024f * 1024f);
+            Debug.LogWarning($"Direction array ~ {approxMB:F2} MB");
+        }
+        
+        JobHandle ScheduleRaycastJob()
+        {
+            // Setup the raycast commands for all rays
+            int index = 0;
+            QueryParameters qp = QueryParameters.Default;
+            for (int i = 0; i < totalRays; i++)
+            {
+                raycastCommands[index++] = new RaycastCommand(
+                    from: emitter.position,
+                    direction: rayDirections[i / pointArraySize, i % pointArraySize],
+                    queryParameters: qp,
+                    distance: maxDistance);
+            }
+            // Schedule the raycast job
+            return RaycastCommand.ScheduleBatch(
+                commands: raycastCommands,
+                results: raycastHits,
+                minCommandsPerJob: 1);
+        }
+        
         IEnumerator YieldIfFrameTimeExceeded()
         {
+            // Time management helper subroutine
             timeElapsedThisFrame += Time.deltaTime;
             if (timeElapsedThisFrame >= frameTimeLimit)
             {
                 timeElapsedThisFrame = 0f;
+                clockYielded = true;
                 yield return null; // Pause the coroutine until the next frame
+            }
+            else
+            {
+                clockYielded = false;
             }
         }
     }
 
     // TODO: Try to make this a coroutine to avoid frame drops
-    public void UpdateLiDARImage_LiveScan()
+    public void UpdateLiDARImageIfDue(float[,] pointArrayFrame)
     {
-        // Generate the LiDAR image from the point array snapshot
-        float[,] pointArraySnapshot = (float[,])pointArray.Clone();
-        Texture2D image = LiDARImageGeneration.GenerateLiDARImage(pointArraySnapshot, imageSize, maxDistance);
-        uiImageComponent_LiveScan.sprite = Sprite.Create(image, new Rect(0, 0, image.width, image.height), new Vector2(0.5f, 0.5f));
-    }
-    public void UpdateLiDARImage_CompleteScan(float[,] pointArrayFrame)
-    {
-        // Generate the LiDAR image from the completed point array
-        Texture2D image = LiDARImageGeneration.GenerateLiDARImage(pointArrayFrame, imageSize, maxDistance);
-        uiImageComponent_CompleteScan.sprite = Sprite.Create(image, new Rect(0, 0, image.width, image.height), new Vector2(0.5f, 0.5f));
+        float currentTime = Time.time;
+        float timeSinceLastImageUpdate = currentTime - timeOfLatestImageUpdaten;
+        if (timeSinceLastImageUpdate < 1f / imageRefreshRate)
+        {
+            return; // Not enough time has passed since the last update
+        }
+        else
+        {
+            // Generate the LiDAR image from the completed point array
+            Texture2D image = LiDARImageGeneration.GenerateLiDARImage(pointArrayFrame, imageSize, maxDistance);
+            uiImageComponent_CompleteScan.sprite = Sprite.Create(image, new Rect(0, 0, image.width, image.height), new Vector2(0.5f, 0.5f));
+            timeOfPreviousImageUpdate = timeOfLatestImageUpdaten;
+            timeOfLatestImageUpdaten = currentTime;
+            //Debug.Log("LiDAR image update interval: " + (timeSinceLastImageUpdate / 1000) + "ms");
+        }
     }
 }

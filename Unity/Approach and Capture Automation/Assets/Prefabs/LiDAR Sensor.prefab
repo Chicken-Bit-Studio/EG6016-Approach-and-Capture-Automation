@@ -47,10 +47,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   emitter: {fileID: 7754920693093357407}
   ignoreParentColliders: 1
+  minimumSimulationFPS: 30
   verticalHalfFOV: 35
-  raysPerDegree: 5
-  maxDistance: 20
-  scanFrequency: 10
+  raysPerDegree: 1
+  maxDistance: 1
+  recalibrationProgress: 0
   generateLiDARImage: 1
   imageRefreshRate: 5
   imageSize: 0

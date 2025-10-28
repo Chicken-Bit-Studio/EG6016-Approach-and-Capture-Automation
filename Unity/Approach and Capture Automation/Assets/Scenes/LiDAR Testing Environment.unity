@@ -644,18 +644,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: LiDAR Sensor
       objectReference: {fileID: 0}
-    - target: {fileID: 6678874683865249393, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
-      propertyPath: maxDistance
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6678874683865249393, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
-      propertyPath: raysPerDegree
-      value: 0.88
-      objectReference: {fileID: 0}
-    - target: {fileID: 6678874683865249393, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
-      propertyPath: verticalHalfFOV
-      value: 20.8
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
