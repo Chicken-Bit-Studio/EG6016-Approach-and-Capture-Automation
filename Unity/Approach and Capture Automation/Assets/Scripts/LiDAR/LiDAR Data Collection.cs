@@ -60,6 +60,7 @@ public class LiDARDataCollection : MonoBehaviour
     private float lastVerticalHalfFOV;
     private float lastRaysPerDegree;
     private float lastMaxDistance;
+    private Vector3 emitterUpDirection;
     private void GetLastVariables()
     {
         lastVerticalHalfFOV = verticalHalfFOV;
@@ -90,6 +91,8 @@ public class LiDARDataCollection : MonoBehaviour
 
     void Update()
     {
+        //// Cache emitter up direction
+        //emitterUpDirection = emitter.rotation * Vector3.up;
         // Start the LiDAR scanning coroutine if not already running
         if (lidarCoroutine == null)
         {
@@ -123,9 +126,9 @@ public class LiDARDataCollection : MonoBehaviour
         float frameTimeLimit = 1f / minimumSimulationFPS;
         float timeElapsedThisFrame = 0f;
         bool clockYielded = false;
-        // Ray directions won't change between scans unless LiDAR parameters do, so precompute them once
-        Vector3[,] rayDirections = new Vector3[pointArraySize, pointArraySize];
-        yield return PrecomputeRayDirections();
+        // Ray rotations won't change between scans unless LiDAR parameters do, so precompute them once
+        Quaternion[,] rayRotations = new Quaternion[pointArraySize, pointArraySize];
+        yield return PrecomputeRayRotations();
 
         // LOOP PHASE - Main scanning loop
         while (true)
@@ -140,19 +143,8 @@ public class LiDARDataCollection : MonoBehaviour
             // Finalize the job
             rayJobHandle.Complete();
             // Retrieve the results and assign distances to the point array
-            for (int i = 0; i < totalRays; i++)
-            {
-                int row = i / pointArraySize;
-                int col = i % pointArraySize;
-                if (raycastHits[i].collider != null)
-                {
-                    pointArray[row, col] = raycastHits[i].distance;
-                }
-                else
-                {
-                    pointArray[row, col] = float.PositiveInfinity;
-                }
-            }
+            AssignToPointArray();
+            
             // The job is done, so we update the scan image
             if (generateLiDARImage)
             {
@@ -160,7 +152,7 @@ public class LiDARDataCollection : MonoBehaviour
             }
         }
     
-        IEnumerator PrecomputeRayDirections()
+        IEnumerator PrecomputeRayRotations()
         {
             // FOV/ray-density values
             int index = 0;
@@ -174,8 +166,7 @@ public class LiDARDataCollection : MonoBehaviour
                 {
                     // Precompute horizontal angle
                     float horizontalAngle_Deg = startDeg + (j * stepDeg);
-                    Quaternion rotation = Quaternion.Euler(verticalAngle_Deg, 0, horizontalAngle_Deg);
-                    rayDirections[i, j] = rotation * emitter.up;    // Note: !! This might rely on emitter.up being constant during the simulation
+                    rayRotations[i, j] = Quaternion.Euler(verticalAngle_Deg, 0, horizontalAngle_Deg);
                     index++;
                     // Yield control if frame time limit is reached during setup
                     yield return YieldIfFrameTimeExceeded();
@@ -188,7 +179,7 @@ public class LiDARDataCollection : MonoBehaviour
                     //if (visualizeRaysInGameView && (index % 1000 == 0))
                     //{
                         Debug.Log("Drawing ray " + index);
-                        Debug.DrawRay(emitter.position, rayDirections[i, j] * maxDistance, Color.blue, float.PositiveInfinity);
+                        Debug.DrawRay(emitter.position, emitter.rotation * (rayRotations[i, j] * Vector3.up), Color.blue, duration: float.PositiveInfinity);
                     //}
                 }
             }
@@ -208,7 +199,7 @@ public class LiDARDataCollection : MonoBehaviour
             {
                 raycastCommands[index++] = new RaycastCommand(
                     from: emitter.position,
-                    direction: rayDirections[i / pointArraySize, i % pointArraySize],
+                    direction: emitter.rotation * (rayRotations[i / pointArraySize, i % pointArraySize] * Vector3.up),
                     queryParameters: qp,
                     distance: maxDistance);
             }
@@ -217,6 +208,24 @@ public class LiDARDataCollection : MonoBehaviour
                 commands: raycastCommands,
                 results: raycastHits,
                 minCommandsPerJob: 1);
+        }
+        
+        void AssignToPointArray()
+        {
+            // Assign raycast results to the point array
+            for (int i = 0; i < totalRays; i++)
+            {
+                int row = i / pointArraySize;
+                int col = i % pointArraySize;
+                if (raycastHits[i].collider != null)
+                {
+                    pointArray[row, col] = raycastHits[i].distance;
+                }
+                else
+                {
+                    pointArray[row, col] = float.PositiveInfinity;
+                }
+            }
         }
         
         IEnumerator YieldIfFrameTimeExceeded()
