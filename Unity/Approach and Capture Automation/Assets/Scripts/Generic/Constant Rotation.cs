@@ -17,6 +17,6 @@ public class ConstantRotation : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        objectTransform.Rotate(Vector3.up, rotationSpeed * Time.fixedDeltaTime);
+        objectTransform.Rotate(Vector3.forward, rotationSpeed * Time.fixedDeltaTime);
     }
 }

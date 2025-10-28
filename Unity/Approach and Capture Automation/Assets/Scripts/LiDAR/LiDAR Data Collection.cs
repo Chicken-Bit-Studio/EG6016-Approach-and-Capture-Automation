@@ -44,7 +44,7 @@ public class LiDARDataCollection : MonoBehaviour
     private Image uiImageComponent_CompleteScan;
 
     [Header("Debug Settings")]
-    public bool visualizeRaysInSceneView = false;
+    public bool visualizeRaysInGameView = false;
 
     [HideInInspector]
     public float[,] pointArray;
@@ -183,6 +183,13 @@ public class LiDARDataCollection : MonoBehaviour
                     {
                         recalibrationProgress = ((float)index) / totalRays;
                     }
+                    // Debugging
+                    // Draw every 1000th ray in the game view
+                    //if (visualizeRaysInGameView && (index % 1000 == 0))
+                    //{
+                        Debug.Log("Drawing ray " + index);
+                        Debug.DrawRay(emitter.position, rayDirections[i, j] * maxDistance, Color.blue, float.PositiveInfinity);
+                    //}
                 }
             }
             // Debugging
