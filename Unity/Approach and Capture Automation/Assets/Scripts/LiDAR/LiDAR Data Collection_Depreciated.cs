@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// <summary>
 /// Class for collecting LiDAR data in a Unity scene.
 /// </summary>
-public class LiDARDataCollection : MonoBehaviour
+public class LiDARDataCollection_Depreciated : MonoBehaviour
 {
     [Header("LiDAR Initialisation Settings")]
     [Tooltip("Transform of the LiDAR emitter. Rays are cast in this transform's +y direction.")]
@@ -110,6 +110,12 @@ public class LiDARDataCollection : MonoBehaviour
                 GetLastVariables();
             }
         }
+    }
+
+    private void OnDestroy()
+    {
+        if (raycastCommands.IsCreated) raycastCommands.Dispose();
+        if (raycastHits.IsCreated) raycastHits.Dispose();
     }
 
     public IEnumerator PerformLiDARScan()
@@ -257,7 +263,7 @@ public class LiDARDataCollection : MonoBehaviour
         else
         {
             // Generate the LiDAR image from the completed point array
-            Texture2D image = LiDARImageGeneration.GenerateLiDARImage(pointArrayFrame, imageSize, maxDistance);
+            Texture2D image = LiDARImageGeneration_Depreciated.GenerateLiDARImage(pointArrayFrame, imageSize, maxDistance);
             uiImageComponent_CompleteScan.sprite = Sprite.Create(image, new Rect(0, 0, image.width, image.height), new Vector2(0.5f, 0.5f));
             timeOfPreviousImageUpdate = timeOfLatestImageUpdaten;
             timeOfLatestImageUpdaten = currentTime;

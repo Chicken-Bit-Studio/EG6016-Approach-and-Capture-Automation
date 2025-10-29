@@ -5,17 +5,17 @@ using UnityEngine;
 /// <summary>
 /// Class for generating LiDAR images from collected LiDAR data.
 /// </summary>
-public static class LiDARImageGeneration
+public static class LiDARImageGeneration_Depreciated
 {
-    public static Texture2D GenerateLiDARImage(float[,] pointArray, LiDARDataCollection.ImageSizeSettings imageSize, float maxDistance)
+    public static Texture2D GenerateLiDARImage(float[,] pointArray, LiDARDataCollection_Depreciated.ImageSizeSettings imageSize, float maxDistance)
     {
         int resolution = 1024; // Default resolution
         switch (imageSize)
         {
-            case LiDARDataCollection.ImageSizeSettings.Size512x512:
+            case LiDARDataCollection_Depreciated.ImageSizeSettings.Size512x512:
                 resolution = 512;
                 break;
-            case LiDARDataCollection.ImageSizeSettings.Size1024x1024:
+            case LiDARDataCollection_Depreciated.ImageSizeSettings.Size1024x1024:
                 resolution = 1024;
                 break;
         }
