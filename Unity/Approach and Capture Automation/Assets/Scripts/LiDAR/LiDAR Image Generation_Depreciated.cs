@@ -27,7 +27,7 @@ public static class LiDARImageGeneration_Depreciated
         {
             for (int x = 0; x < resolution; x++)
             {
-                // Map pixel coordinates to point array indices
+                // Map pixel coordinates to point array indexes
                 int pointX = Mathf.Clamp(Mathf.FloorToInt((float)x / resolution * pointArraySize), 0, pointArraySize - 1);
                 int pointY = Mathf.Clamp(Mathf.FloorToInt((float)y / resolution * pointArraySize), 0, pointArraySize - 1);
 

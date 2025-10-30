@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 777693120178758605}
-  - component: {fileID: 6678874683865249393}
   - component: {fileID: 8852607708198932526}
   m_Layer: 0
   m_Name: LiDAR Sensor
@@ -34,29 +33,6 @@ Transform:
   - {fileID: 7523241028332631632}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6678874683865249393
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806190004492866393}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41239fe4958745a49b3d6b53baac8167, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  emitter: {fileID: 7754920693093357407}
-  ignoreParentColliders: 1
-  minimumSimulationFPS: 30
-  verticalHalfFOV: 35
-  raysPerDegree: 1
-  maxDistance: 1
-  recalibrationProgress: 0
-  generateLiDARImage: 1
-  imageRefreshRate: 5
-  imageSize: 0
-  visualizeRaysInGameView: 0
 --- !u!114 &8852607708198932526
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,11 +45,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eef36a5e35f47247adfdd6a745cd123, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  emitter: {fileID: 7754920693093357407}
-  ignoreParentColliders: 1
-  fieldOfView: 1
-  raysPerDegree: 2
-  maxDistance: 20
+  sensorParameters:
+    emitter: {fileID: 7754920693093357407}
+    ignoreParentColliders: 1
+    fieldOfView: 1
+    raysPerDegree: 2
+    maxDistance: 20
+  imageParameters:
+    generateLiDARImage: 1
+    lidarUIImage: {fileID: 0}
+    maxResolution: 0
+    imageRefreshRate: 8
+    imageRefreshPeriod: 0.125
+    lidarTexture: {fileID: 0}
 --- !u!1 &1736762378376204491
 GameObject:
   m_ObjectHideFlags: 0

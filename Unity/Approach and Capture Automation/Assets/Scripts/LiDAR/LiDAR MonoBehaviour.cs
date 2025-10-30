@@ -1,6 +1,9 @@
 using System.Collections;
+using Unity.Collections;
 using Unity.Jobs;
+using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.UI;
 using static LiDARStatic;
 
 /// <summary>
@@ -8,44 +11,150 @@ using static LiDARStatic;
 /// </summary>
 public class LiDARMonoBehaviour : MonoBehaviour
 {
-    [Header("LiDAR Initialisation Settings")]
-    [Tooltip("Transform of the LiDAR emitter. Rays are cast in this transform's +y direction.")]
-    public Transform emitter;
-    [Tooltip("Should the LiDAR raycasts ignore colliders on parent objects of the emitter?")]
-    public bool ignoreParentColliders = true;
-    
-    [Header("LiDAR Scan Settings")]
-    [Tooltip("The sensor's field of view in degrees.")]
-    public LiDARParameters.fov fieldOfView = LiDARParameters.fov._60deg;
-    [Tooltip("The number of rays to cast per degree in the sensor's field of view.")]
-    public LiDARParameters.rayDensity raysPerDegree = LiDARParameters.rayDensity._4;
-    [Tooltip("Maximum distance for each LiDAR raycast.")]
-    [Range(0.5f, 50f)]
-    public float maxDistance = 20f;
-
-    // The point cloud data from the most recent LiDAR scan
-    public float[] pointCloudData { get; private set; }
-
-    // Private variables related to task scheduling and tracking
-    private Coroutine liDARScanCoroutine;
-    
-    // Track the Inspector parameters for changes over time
-    private LiDARParameters.fov lastFieldOfView;
-    private LiDARParameters.rayDensity lastRaysPerDegree;
-    private float lastMaxDistance;
-    private void GetLastVariables()
+    [System.Serializable]
+    public class SensorParameters
     {
-        lastFieldOfView = fieldOfView;
-        lastRaysPerDegree = raysPerDegree;
-        lastMaxDistance = maxDistance;
+        [Header("LiDAR Initialisation Settings")]
+        [Tooltip("Transform of the LiDAR emitter. Rays are cast in this transform's +y direction.")]
+        public Transform emitter;
+        [Tooltip("Should the LiDAR raycasts ignore colliders on parent objects of the emitter?")]
+        public bool ignoreParentColliders = true;
+
+        [Header("Scanning Settings")]
+        [Tooltip("The sensor's field of view in degrees.")]
+        public LiDARParameters.FOV fieldOfView = LiDARParameters.FOV._60deg;
+        [Tooltip("The number of rays to cast per degree in the sensor's field of view.")]
+        public LiDARParameters.RayDensity raysPerDegree = LiDARParameters.RayDensity._4;
+        [Tooltip("Maximum distance for each LiDAR raycast.")]
+        [Range(0.5f, 50f)]
+        public float maxDistance = 20f;
+
+        // Track the Inspector parameters for changes over time
+        private LiDARParameters.FOV lastFieldOfView;
+        private LiDARParameters.RayDensity lastRaysPerDegree;
+        public bool HasChanged()
+        {
+            // Note: We don't need to poll maxDistance here, as it is only read into buildRaycastCommandsJob and doesn't affect raycast command input native array dimensions or values.
+            bool changed = lastFieldOfView != fieldOfView ||
+                lastRaysPerDegree != raysPerDegree;
+            if (changed)
+            {
+                lastFieldOfView = fieldOfView;
+                lastRaysPerDegree = raysPerDegree;
+            }
+            return changed;
+        }
+        public SensorParameters()
+        {
+            // Write to the tracking variables during class initiation
+            HasChanged();
+        }
     }
+
+    [System.Serializable]
+    public class ImageParameters
+    {
+        [Header("Image Generation Settings")]
+        [Tooltip("Should the LiDAR data be used to generate an image on-screen?")]
+        public bool generateLiDARImage = true;
+        [Tooltip("The UnityEngine.UI.Image component the generated image feeds to.")]
+        public RawImage lidarUIImage;
+        [Tooltip("The maximum resolution of the output image. If the LiDAR point cloud data array has a smaller size than this value the resulting image will be smaller.")]
+        public LiDARImageGeneration.ImageResolution maxResolution = LiDARImageGeneration.ImageResolution.Size512x512;
+        [Tooltip("The refresh rate of the LiDAR image in Hz.")]
+        [Range(1f, 30f)]
+        public float maxRefreshRate = 8f;
+        [HideInInspector]
+        public float imageRefreshPeriod = 1 / 8f;
+        [HideInInspector]
+        public Texture2D lidarTexture;
+        [HideInInspector]
+        public int lidarTexturePixelCount;
+        [HideInInspector]
+        public int[] lidarTextureMappedIndexes;
+        [HideInInspector]
+        public byte[] lidarTextureByteBuffer;
+
+        // Track the Inspector parameters for changes over time
+        //private bool lastGenerateLiDARImage;
+        //private RawImage lastLidarUIImage;
+        //private LiDARImageGeneration.ImageResolution lastMaxResolution;
+        private LiDARImageGeneration.ImageResolution lastMaxResolution;
+        private float lastImageRefreshRate;
+        public bool HasChanged()
+        {
+            bool changed = maxResolution != lastMaxResolution || lastImageRefreshRate != maxRefreshRate;
+            if (changed)
+            {
+                lastMaxResolution = maxResolution;
+                lastImageRefreshRate = maxRefreshRate;
+                imageRefreshPeriod = 1 / maxRefreshRate;
+            }
+            return changed;
+        }
+        public ImageParameters()
+        {
+            // Write to the tracking variables during class initiation
+            HasChanged();
+        }
+    }
+
+    [System.Serializable]
+    public class DebuggingSettings
+    {
+        [Header ("Debugging Tools")]
+        [Tooltip("Draw every 283rd ray for debugging purposes.")]
+        public bool drawRays = false; 
+    }
+
+    public class NativeArrays
+    {
+        // Native arrays are built for highly efficient job allocation but are unmanaged.
+        public int rootOfArraySize, totalRayCount, idealBatchSize;
+        public NativeArray<float3> localspaceDirs;
+        public NativeArray<float3> worldspaceDirs;
+        public NativeArray<RaycastCommand> raycastCommands;
+        public NativeArray<RaycastHit> raycastHits;
+        public JobHandle lastJobHandle;
+
+        public void DisposeAll()
+        {
+            // Unity throws a fit if you try to dispose of native arrays if there are currently-running jobs that depend on them.
+            // Note: Unity actually creates duplicate scene objects and their attached classes  in the edit-runtime lifecycle, and so DisposeAll is actually
+            //  called multiple times on application exit, but only the instance used in runtime is populatd, and so memory leaks don't happen here.
+            lastJobHandle.Complete();
+            if (localspaceDirs.IsCreated) localspaceDirs.Dispose();
+            if (worldspaceDirs.IsCreated) worldspaceDirs.Dispose();
+            if (raycastCommands.IsCreated) raycastCommands.Dispose();
+            if (raycastHits.IsCreated) raycastHits.Dispose();
+        }
+        public NativeArrays()
+        {
+            Application.quitting += DisposeAll;
+        }
+        public int CountRayHits()
+        {
+            // For debugging. Slow.
+            if (!raycastHits.IsCreated) { return -1; }
+            int count = 0;
+            for (int i = 0; i < totalRayCount; i++)
+            {
+                if (raycastHits[i].collider != null) { count++; }
+            }
+            return count;
+        }
+    }
+
+    public SensorParameters sensorParameters = new();
+    public ImageParameters imageParameters = new();
+    public DebuggingSettings debuggingSettings = new();
+    public NativeArrays nativeArrays = new();
+    public Coroutine liDARScanCoroutine;
 
     void Start()
     {
         // Catch undeclared variables
-        if (emitter == null) Debug.LogError("LiDARMonoBehaviour: Emitter transform not assigned.");
-        // Initialize "last known" parameter values
-        GetLastVariables();
+        if (sensorParameters.emitter == null) Debug.LogError($"{this.name}: Emitter transform not assigned.");
         // Start LiDAR scanning coroutine
         liDARScanCoroutine = StartCoroutine(PerformLiDARScan());
     }
@@ -53,27 +162,44 @@ public class LiDARMonoBehaviour : MonoBehaviour
     void Update()
     {
         // Check for parameter changes
-        if (fieldOfView != lastFieldOfView || raysPerDegree != lastRaysPerDegree || maxDistance != lastMaxDistance)
+        if (sensorParameters.HasChanged())
         {
-            // Parameters have changed, so restart the LiDAR scan coroutine, dispose of unmanaged native arrays, and update last known values
+            // Parameters have changed, so restart the LiDAR scan coroutine and dispose of unmanaged native arrays and dependants.
             if (liDARScanCoroutine != null) StopCoroutine(liDARScanCoroutine);
-            LiDARRuntimeJobs.NativeArrays.Dispose();
-            GetLastVariables();
+            nativeArrays.DisposeAll();
+            imageParameters.lidarTexture = null;
             liDARScanCoroutine = StartCoroutine(PerformLiDARScan());
+        }
+        if (imageParameters.HasChanged())
+        {
+            // Parameters have changed, so clear lidarTexture. This makes UpdateLiDARImage call RegenerateLiDARImage.
+            imageParameters.lidarTexture = null;
         }
     }
 
     private IEnumerator PerformLiDARScan()
     {
+        // Ensure the LiDAR image isn't updating too rapidly
+        float secondsSinceImageUpdate = 0f;
+
         // Note: Almost all logic and data management has been optimised and offloaded to a static script. See LiDARStatic.
         while (true)
         {
             // Create, await, and the net raycasting job
-            JobHandle jh = LiDARRuntimeJobs.ScheduleAndRunLiDARRaycasts(emitter, fieldOfView, raysPerDegree, maxDistance);
+            JobHandle jh = LiDARRuntimeJobs.ScheduleAndRunLiDARRaycasts(monoBehaviourInstance: this);
             while (!jh.IsCompleted) { yield return null; }
             jh.Complete();
-            // Proceede to use the raycast hit data at LiDARStatic.NativeArrays.raycastHits
-            LiDARImageGeneration.UpdateLiDARImage();
+            
+            // Proceed to use the raycast hit data at nativeArrays.raycastHits
+            if (imageParameters.generateLiDARImage)
+            {
+                secondsSinceImageUpdate += Time.deltaTime;
+                if (secondsSinceImageUpdate >= imageParameters.imageRefreshPeriod)
+                {
+                    LiDARImageGeneration.UpdateLiDARImage(monoBehaviourInstance: this);
+                    secondsSinceImageUpdate = 0;
+                }
+            }
         }
     }
 }

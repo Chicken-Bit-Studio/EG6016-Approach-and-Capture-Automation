@@ -18,40 +18,40 @@ public static class LiDARStatic
     public static class LiDARParameters
     {
         // Summary: The complete field of view from the sensor's 'up' direction. Not the half FOV.
-        public enum fov { _30deg, _60deg, _90deg, _120deg }
+        public enum FOV { _30deg, _60deg, _90deg, _120deg }
         // Summary: The density of rays per degree in both vertical and horizontal directions.
-        public enum rayDensity { _1, _2, _4, _8 }
-        public static float DecodeFOV(fov enumFOV)
+        public enum RayDensity { _1, _2, _4, _8 }
+        public static float DecodeFOV(FOV enumFOV)
         {
             switch (enumFOV)
             {
-                case fov._30deg:
+                case FOV._30deg:
                     return 30f;
-                case fov._60deg:
+                case FOV._60deg:
                     return 60f;
-                case fov._90deg:
+                case FOV._90deg:
                     return 90f;
-                case fov._120deg:
+                case FOV._120deg:
                     return 120f;
                 default:
-                    Debug.LogError("Unrecognized FOV enum value: " + Enum.GetName(typeof(fov), enumFOV));
+                    Debug.LogError("Unrecognized FOV enum value: " + Enum.GetName(typeof(FOV), enumFOV));
                     return 0f;
             }
         }
-        public static float DecodeRayDensity(rayDensity enumRayDensity)
+        public static float DecodeRayDensity(RayDensity enumRayDensity)
         {
             switch (enumRayDensity)
             {
-                case rayDensity._1:
+                case RayDensity._1:
                     return 1f;
-                case rayDensity._2:
+                case RayDensity._2:
                     return 2f;
-                case rayDensity._4:
+                case RayDensity._4:
                     return 4f;
-                case rayDensity._8:
+                case RayDensity._8:
                     return 8f;
                 default:
-                    Debug.LogError("Unrecognized Ray Density enum value: " + Enum.GetName(typeof(rayDensity), enumRayDensity));
+                    Debug.LogError("Unrecognized Ray Density enum value: " + Enum.GetName(typeof(RayDensity), enumRayDensity));
                     return 0f;
             }
         }
@@ -63,6 +63,7 @@ public static class LiDARStatic
         // Precomputation of LiDAR ray directions for a discrete set of LiDAR parameters reduces runtime computation load significantly.
         // This class provides an Editor menu item to recompute all combinations of LiDAR ray direction binaries for all LiDARParameters enum combinations.
         // The generated .bin files are stored in Application.streamingAssetsPath by default. They are structured as follows:
+        // [int32] array size
         // [int32] count
         // [float32] x0, [float32] y0, [float32] z0, [float32] x1, [float32] y1, [float32] z1, ...
         // Each (x,y,z) triple is a normalized direction vector for a LiDAR ray.
@@ -76,9 +77,9 @@ public static class LiDARStatic
         {
             // Iterate through all combinations of LiDAR parameters
             // Note: Iterate through the low ray density settings first to reduce computation time for testing and to ensure the cheaper tasks are completed and saved first
-            foreach (LiDARParameters.rayDensity rayDensitySetting in Enum.GetValues(typeof(LiDARParameters.rayDensity)))
+            foreach (LiDARParameters.RayDensity rayDensitySetting in Enum.GetValues(typeof(LiDARParameters.RayDensity)))
             {
-                foreach (LiDARParameters.fov fovSetting in Enum.GetValues(typeof(LiDARParameters.fov)))
+                foreach (LiDARParameters.FOV fovSetting in Enum.GetValues(typeof(LiDARParameters.FOV)))
                 {
                     // Generate LiDAR ray direction binary for this parameter combination
                     GenerateLiDARRayDirectionBinary(fovSetting, rayDensitySetting);
@@ -92,7 +93,7 @@ public static class LiDARStatic
                 Debug.Log("LiDAR Precomputation Manager has completed all tasks.");
             };
         }
-        private static void GenerateLiDARRayDirectionBinary(LiDARParameters.fov enumFOV, LiDARParameters.rayDensity enumRayDensity)
+        private static void GenerateLiDARRayDirectionBinary(LiDARParameters.FOV enumFOV, LiDARParameters.RayDensity enumRayDensity)
         {
             // Declare the process has started and start a stopwatch to time it
             var stopwatch = new System.Diagnostics.Stopwatch();
@@ -106,8 +107,8 @@ public static class LiDARStatic
             string path = LiDARDirectionsBinaryFileUtilities.GenerateLiDARRayDirectionBinaryPath(enumFOV, enumRayDensity);
 
             // Calculate point array size, ray count, etc.
-            int pointArraySize = Mathf.CeilToInt(fieldOfView * raysPerDegree);
-            int rayCount = pointArraySize * pointArraySize;
+            int rootOfArraySize = Mathf.CeilToInt(fieldOfView * raysPerDegree);
+            int rayCount = rootOfArraySize * rootOfArraySize;
             float startDeg = -fieldOfView / 2f;
             float stepDeg = 1f / raysPerDegree;
 
@@ -117,20 +118,21 @@ public static class LiDARStatic
                 using (var fs = File.Open(path, FileMode.Create, FileAccess.Write))
                 using (var bw = new BinaryWriter(fs))
                 {
-                    // Write the total ray count at the start of the file
+                    // Write the array size and total ray count at the start of the file
+                    bw.Write(rootOfArraySize);
                     bw.Write(rayCount);
 
                     // Write row-major (row = vertical index, col = horizontal index)
-                    for (int r = 0; r < pointArraySize; r++)
+                    for (int r = 0; r < rootOfArraySize; r++)
                     {
                         // Precompute vertical angle
                         float vAngle = startDeg + r * stepDeg;
-                        for (int c = 0; c < pointArraySize; c++)
+                        for (int c = 0; c < rootOfArraySize; c++)
                         {
                             // Precompute horizontal angle
                             float hAngle = startDeg + c * stepDeg;
                             // Compute direction vector
-                            Vector3 dirVec = (Quaternion.Euler(vAngle, hAngle, 0f) * Vector3.up).normalized;
+                            Vector3 dirVec = (Quaternion.Euler(vAngle, 0f, hAngle) * Vector3.up).normalized;
                             bw.Write(dirVec.x);
                             bw.Write(dirVec.y);
                             bw.Write(dirVec.z);
@@ -152,59 +154,19 @@ public static class LiDARStatic
 
     public static class LiDARRuntimeJobs
     {
-        public static class NativeArrays
-        {
-            public static int totalRayCount;
-            public static int idealBatchSize;
-            public static JobHandle lastJobHandle;
-            public static NativeArray<float3> localspaceDirs;
-            public static NativeArray<float3> worldspaceDirs;
-            public static NativeArray<RaycastCommand> raycastCommands;
-            public static NativeArray<RaycastHit> raycastHits;
-            private static LiDARParameters.fov lastFovUsed;
-            private static LiDARParameters.rayDensity lastRayDensityUsed;
-            private static float lastMaxDistanceUsed;
-
-            // Native arrays are unmanaged, so this method calls Dispose() automatically on application exit.
-            [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-            private static void WaitForApplicationQuit()
-            {
-                Application.quitting += Dispose;
-            }
-            public static void Dispose()
-            {
-                // Unity throws a fit if you try to dispose of native arrays if there are curerntly-running jobs that depend on them
-                lastJobHandle.Complete();
-                if (localspaceDirs.IsCreated) localspaceDirs.Dispose();
-                if (worldspaceDirs.IsCreated) worldspaceDirs.Dispose();
-                if (raycastCommands.IsCreated) raycastCommands.Dispose();
-                if (raycastHits.IsCreated) raycastHits.Dispose();
-            }
-            public static void DisposeIfSensorParametersHaveChanged(LiDARParameters.fov thisFovUsed, LiDARParameters.rayDensity thisRayDensityUsed, float thisMaxDistanceUsed)
-            {
-                // If any parameters are changed between native array uses they need to be disposed of and reallocated.
-                if(lastFovUsed != thisFovUsed || lastRayDensityUsed != thisRayDensityUsed || lastMaxDistanceUsed != thisMaxDistanceUsed)
-                {
-                    Dispose();
-                    lastFovUsed = thisFovUsed;
-                    lastRayDensityUsed = thisRayDensityUsed;
-                    lastMaxDistanceUsed = thisMaxDistanceUsed;
-                }
-            }
-        }
         // Burst job structs for mega-efficient execution of heavy batch-based math
         private static class JobStructures
         {
             public struct RotateRayDirectionsJob : IJobParallelFor
-        {
-            [ReadOnly] public NativeArray<float3> lsDirs;
-            public NativeArray<float3> wsDirs;
-            public quaternion rot;  // unity.mathematics quaternion
-            public void Execute(int i)
             {
-                wsDirs[i] = math.mul(rot, lsDirs[i]);
+                [ReadOnly] public NativeArray<float3> lsDirs;
+                public NativeArray<float3> wsDirs;
+                public quaternion rot;  // unity.mathematics quaternion
+                public void Execute(int i)
+                {
+                    wsDirs[i] = math.mul(rot, lsDirs[i]);
+                }
             }
-        }
             public struct BuildRaycastCommandsJob : IJobParallelFor
             {
                 [ReadOnly] public NativeArray<float3> wsDirs;
@@ -220,65 +182,89 @@ public static class LiDARStatic
             }
         }
         // Get a NativeArray<float3> object for the given sensor parameters. This array is generated once and not changed outside of sensor parameter updates.
-        public static void GenerateLocalspaceDirsNativeArray(LiDARParameters.fov enumFOV, LiDARParameters.rayDensity enumRayDensity)
+        public static void GenerateLocalspaceDirsNativeArray(LiDARMonoBehaviour monoBehaviourInstance)
         {
+            // Create a shorter alias for readability
+            var mono = monoBehaviourInstance;
+
             // Note: Each float3 here is representitive of a localspace Vector3 ray direction centered around the +y direction.
             // Retrieve a corresponding BinaryReader
-            BinaryReader br = LiDARDirectionsBinaryFileUtilities.GetBinaryFileReader(enumFOV, enumRayDensity);
+            BinaryReader br = LiDARDirectionsBinaryFileUtilities.GetBinaryFileReader(mono.sensorParameters.fieldOfView, mono.sensorParameters.raysPerDegree);
+
             // Allocate the NativeArrays (uninitialized to avoid clearing cost)
+            mono.nativeArrays.rootOfArraySize = br.ReadInt32();
             int count = br.ReadInt32();
-            NativeArrays.totalRayCount = count;
-            NativeArrays.idealBatchSize = math.clamp(count/(SystemInfo.processorCount*4), 64, 1024);
-            NativeArrays.localspaceDirs = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            NativeArrays.worldspaceDirs = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            NativeArrays.raycastCommands = new NativeArray<RaycastCommand>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            NativeArrays.raycastHits = new NativeArray<RaycastHit>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            // Loop through the .bin file and create populate the float3 native array
+            mono.nativeArrays.totalRayCount = count;
+            mono.nativeArrays.idealBatchSize = math.clamp(count / (SystemInfo.processorCount * 4), 64, 1024);
+            mono.nativeArrays.localspaceDirs = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.worldspaceDirs = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.raycastCommands = new NativeArray<RaycastCommand>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.raycastHits = new NativeArray<RaycastHit>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
+            // Loop through the .bin file and populate the float3 native array
             for (int i = 0; i < count; i++)
             {
                 float x = br.ReadSingle();
                 float y = br.ReadSingle();
                 float z = br.ReadSingle();
-                NativeArrays.localspaceDirs[i] = new float3(x, y, z);
+                mono.nativeArrays.localspaceDirs[i] = new float3(x, y, z);
             }
         }
         // Schedule and run a Burst-based sequence of tasks - perform a LiDAR scan!
-        public static JobHandle ScheduleAndRunLiDARRaycasts(Transform emitter, LiDARParameters.fov enumFov, LiDARParameters.rayDensity enumRayDensity, float maxDistance)
+        public static ref JobHandle ScheduleAndRunLiDARRaycasts(LiDARMonoBehaviour monoBehaviourInstance)
         {
-            // Perform some simple logic if the parameters being passed have changed from last time
-            NativeArrays.DisposeIfSensorParametersHaveChanged(enumFov, enumRayDensity, maxDistance);
+            // Create a shorter alias for readability
+            var mono = monoBehaviourInstance;
 
             // Ensure the proper localspace ray directions array has been populated
-            if (!NativeArrays.localspaceDirs.IsCreated) { GenerateLocalspaceDirsNativeArray(enumFov, enumRayDensity); }
+            if (!mono.nativeArrays.localspaceDirs.IsCreated) { GenerateLocalspaceDirsNativeArray(mono); }
 
             // Create and schedule a RotateRayDirectionsJob task
             var rotateRayDirectionsJob = new JobStructures.RotateRayDirectionsJob
             {
-                lsDirs = NativeArrays.localspaceDirs,
-                wsDirs = NativeArrays.worldspaceDirs,
-                rot = new quaternion(emitter.rotation.x, emitter.rotation.y, emitter.rotation.z, emitter.rotation.w),
+                lsDirs = mono.nativeArrays.localspaceDirs,
+                wsDirs = mono.nativeArrays.worldspaceDirs,
+                rot = new quaternion(mono.sensorParameters.emitter.rotation.x, mono.sensorParameters.emitter.rotation.y, mono.sensorParameters.emitter.rotation.z, mono.sensorParameters.emitter.rotation.w),
             };
-            JobHandle rotateRayDirectionsJob_jobHandle = rotateRayDirectionsJob.Schedule(NativeArrays.totalRayCount, NativeArrays.idealBatchSize);
+            JobHandle rotateRayDirectionsJob_jobHandle = rotateRayDirectionsJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize);
 
             // Create and schedule a BuildRaycastCommandsJob task. Note that rotateJob is passed as a completion prerequisite in the .Schedule method.
             var buildRaycastCommandsJob = new JobStructures.BuildRaycastCommandsJob
             {
-                wsDirs = NativeArrays.worldspaceDirs,
-                raycastCommands = NativeArrays.raycastCommands,
-                raysOrigin = (float3)emitter.position,
-                qp = QueryParameters.Default,   // Note: Install potential ignore/backface/other raycast logic here if necessary, or pass it as a parameter.
-                maxDistance = maxDistance,
+                wsDirs = mono.nativeArrays.worldspaceDirs,
+                raycastCommands = mono.nativeArrays.raycastCommands,
+                raysOrigin = (float3)mono.sensorParameters.emitter.position,
+                qp = QueryParameters.Default,   // TODO: Install potential ignore/backface/other raycast logic here if necessary, or pass it as a parameter.
+                maxDistance = mono.sensorParameters.maxDistance
             };
-            JobHandle buildRaycastCommandsJob_jobHandle = buildRaycastCommandsJob.Schedule(NativeArrays.totalRayCount, NativeArrays.idealBatchSize, rotateRayDirectionsJob_jobHandle);
+            JobHandle buildRaycastCommandsJob_jobHandle = buildRaycastCommandsJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, rotateRayDirectionsJob_jobHandle);
 
             // Schedule the actual batched raycast physics processes
-            NativeArrays.lastJobHandle = RaycastCommand.ScheduleBatch(
-                NativeArrays.raycastCommands,
-                NativeArrays.raycastHits,
-                NativeArrays.idealBatchSize,
+            mono.nativeArrays.lastJobHandle = RaycastCommand.ScheduleBatch(
+                mono.nativeArrays.raycastCommands,
+                mono.nativeArrays.raycastHits,
+                mono.nativeArrays.idealBatchSize,
                 buildRaycastCommandsJob_jobHandle
             );
-            return NativeArrays.lastJobHandle;
+
+            // Allow for ray drawing as a debugging tool. Slow.
+            if (mono.debuggingSettings.drawRays)
+            {
+                buildRaycastCommandsJob_jobHandle.Complete();
+                for (int i = 0; i < mono.nativeArrays.totalRayCount; i++)
+                {
+                    if (i % 283 == 0)
+                    {
+                        Debug.DrawRay(
+                            mono.sensorParameters.emitter.position,
+                            mono.nativeArrays.worldspaceDirs[i],
+                            Color.green, mono.imageParameters.imageRefreshPeriod
+                        );
+                    }
+                }
+            }
+
+            return ref mono.nativeArrays.lastJobHandle;
         }
     }
 
@@ -288,11 +274,11 @@ public static class LiDARStatic
         // $"LiDARRayDirections{sanitizedFov}FOV{sanitizedRpd}RaysPerDegree.bin"
 
         // Generate LiDAR ray direction binary file names using known conventions
-        public static string GenerateLiDARRayDirectionBinaryPath(LiDARParameters.fov enumFOV, LiDARParameters.rayDensity enumRayDensity, bool fileNameOnly = false)
+        public static string GenerateLiDARRayDirectionBinaryPath(LiDARParameters.FOV enumFOV, LiDARParameters.RayDensity enumRayDensity, bool fileNameOnly = false)
         {
             // Generate filename and path
-            string sanitizedFov = Enum.GetName(typeof(LiDARParameters.fov), enumFOV);
-            string sanitizedRpd = Enum.GetName(typeof(LiDARParameters.rayDensity), enumRayDensity);
+            string sanitizedFov = Enum.GetName(typeof(LiDARParameters.FOV), enumFOV);
+            string sanitizedRpd = Enum.GetName(typeof(LiDARParameters.RayDensity), enumRayDensity);
             string fileName = $"LiDARRayDirections{sanitizedFov}FOV{sanitizedRpd}RaysPerDegree.bin";
             if (fileNameOnly) return fileName;
             string dir = Application.streamingAssetsPath;
@@ -300,7 +286,7 @@ public static class LiDARStatic
             return Path.Combine(dir, fileName);
         }
         // Provide a BinaryReader for a LiDAR ray direction binary file for the given sensor parameters
-        public static BinaryReader GetBinaryFileReader(LiDARParameters.fov enumFOV, LiDARParameters.rayDensity enumRayDensity)
+        public static BinaryReader GetBinaryFileReader(LiDARParameters.FOV enumFOV, LiDARParameters.RayDensity enumRayDensity)
         {
             // Generate expected file path using the same logic as the precomputation function
             string path = GenerateLiDARRayDirectionBinaryPath(enumFOV, enumRayDensity);
@@ -317,12 +303,84 @@ public static class LiDARStatic
 
     public static class LiDARImageGeneration
     {
-        public enum ImageResolution { Size512x512, Size1024x1024 };
-        private static Texture2D lidarImage;
+        //***********
+        //Note: Image generation is currently bare-bones and not parametised.
 
-        public static void UpdateLiDARImage(Image destinationImage, ImageResolution enumResolution)
+        public enum ImageResolution { Size512x512, Size1024x1024 };
+        public static int DecodeImageResolution(ImageResolution enumImgRes)
         {
-            Debug.
+            switch (enumImgRes)
+            {
+                case ImageResolution.Size512x512:
+                    return 512;
+                case ImageResolution.Size1024x1024:
+                    return 1024;
+                default:
+                    Debug.LogError("Unrecognized ImageResolution enum value: " + Enum.GetName(typeof(ImageResolution), enumImgRes));
+                    return 4;
+            }
+        }
+
+        public static void UpdateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
+        {
+            // Optimisation target
+
+            // Start a stopwatch for debugging purposes
+            //var stopwatch = new System.Diagnostics.Stopwatch();
+            //stopwatch.Start();
+
+            // Create a shorter alias for readability
+            var mono = monoBehaviourInstance;
+
+            // If the mono behaviour's output texture is undefined, generate it
+            if (mono.imageParameters.lidarTexture == null) { RegenerateLiDARImage(mono); }
+
+            // Loop through each pixel in the monobehaviour's LiDAR output texture
+            for (int i = 0; i < mono.imageParameters.lidarTexturePixelCount; i++)
+            {
+                // Determine the corresponding native array element and collect the RaycastHit object corresponding to this pixel
+                RaycastHit hit = mono.nativeArrays.raycastHits[mono.imageParameters.lidarTextureMappedIndexes[i]];
+                // Note: No hit corresponds to a distance value of zero for some reason. Surely it should be float.PositiveInfinity, but what do I know.
+                // Calculate the 8-bit colour of the resulting pixel. Make non-hits black and others fade in from gloom ooo spooky
+                float pseudoValue = (hit.collider == null) ? 0 : (1 - hit.distance / mono.sensorParameters.maxDistance); // 0.0 to 1.0
+                mono.imageParameters.lidarTextureByteBuffer[i] = (byte)(int)(pseudoValue * 255);
+                //if (i % 1000 == 0) { Debug.Log((byte)(int)(pseudoValue * 255)); }
+            }
+
+            // Apply the byte buffer and comit the changes to the texture
+            mono.imageParameters.lidarTexture.LoadRawTextureData(mono.imageParameters.lidarTextureByteBuffer);
+            mono.imageParameters.lidarTexture.Apply();
+
+            // Report to console
+            //stopwatch.Stop();
+            //Debug.Log($"Texture update took {FormatStopwatchDuration(stopwatch)} with {mono.imageParameters.lidarTexturePixelCount} pixels and {mono.nativeArrays.CountRayHits()} hits out of {mono.nativeArrays.totalRayCount} rays.");
+
+        }
+        private static void RegenerateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
+        {
+            // Create a shorter alias for readability
+            var mono = monoBehaviourInstance;
+
+            // Size, create, and assign an empty Texture2D object
+            int newImgSize = math.clamp(mono.nativeArrays.rootOfArraySize, 4, 512);
+            //Debug.LogWarning($"Regenerating Texture2D with image size {newImgSize}x{newImgSize}\nnativeArrays.rootOfArraySize: {mono.nativeArrays.rootOfArraySize}");
+            mono.imageParameters.lidarTexture = new Texture2D(
+                width: newImgSize,
+                height: newImgSize,
+                textureFormat: TextureFormat.R8,
+                mipChain: false);
+            mono.imageParameters.lidarTexture.filterMode = FilterMode.Point;
+            mono.imageParameters.lidarUIImage.texture = mono.imageParameters.lidarTexture;
+
+            // Calculate and record now-unchanging values used during texture updates
+            mono.imageParameters.lidarTexturePixelCount = newImgSize * newImgSize;
+            mono.imageParameters.lidarTextureByteBuffer = new byte[mono.imageParameters.lidarTexturePixelCount];
+            mono.imageParameters.lidarTextureMappedIndexes = new int[mono.imageParameters.lidarTexturePixelCount];
+            float pixelMappingScale = (float)mono.nativeArrays.totalRayCount / mono.imageParameters.lidarTexturePixelCount;
+            for (int i = 0; i < mono.imageParameters.lidarTexturePixelCount; i++)
+            {
+                mono.imageParameters.lidarTextureMappedIndexes[i] = Mathf.FloorToInt(i * pixelMappingScale);
+            }
         }
     }
 }
