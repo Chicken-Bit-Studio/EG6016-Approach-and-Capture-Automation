@@ -307,6 +307,7 @@ public static class LiDARStatic
         //Note: Image generation is currently bare-bones and not parametised.
 
         public enum ImageResolution { Size512x512, Size1024x1024 };
+        public enum MappingCurve { Linear, Exponential, Reciprocal, Logarithmic, GammaCorrection};
         public static int DecodeImageResolution(ImageResolution enumImgRes)
         {
             switch (enumImgRes)
@@ -320,7 +321,25 @@ public static class LiDARStatic
                     return 4;
             }
         }
-
+        public static Func<float, float, float> DecodeMappingCurve(MappingCurve enumMappingCurve)
+        {
+            switch (enumMappingCurve)
+            {
+                case MappingCurve.Linear:
+                    return (v, a) => v;
+                case MappingCurve.Exponential:
+                    return (v, a) => 1f - Mathf.Exp(-a * (1f - v));
+                case MappingCurve.Reciprocal:
+                    return (v, a) => 1f / (1f + a * v);
+                case MappingCurve.Logarithmic:
+                    return (v, a) => Mathf.Log10(1f + a * (1f - v)) / Mathf.Log10(1f + a);
+                case MappingCurve.GammaCorrection:
+                    return (v, a) => Mathf.Pow(v, a);
+                default:
+                    Debug.LogError("Unrecognized MappingCurve enum value: " + Enum.GetName(typeof(ImageResolution), enumMappingCurve));
+                    return (v, a) => 0f;
+            }   
+        }
         public static void UpdateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
         {
             // Optimisation target
@@ -341,10 +360,17 @@ public static class LiDARStatic
                 // Determine the corresponding native array element and collect the RaycastHit object corresponding to this pixel
                 RaycastHit hit = mono.nativeArrays.raycastHits[mono.imageParameters.lidarTextureMappedIndexes[i]];
                 // Note: No hit corresponds to a distance value of zero for some reason. Surely it should be float.PositiveInfinity, but what do I know.
-                // Calculate the 8-bit colour of the resulting pixel. Make non-hits black and others fade in from gloom ooo spooky
-                float pseudoValue = (hit.collider == null) ? 0 : (1 - hit.distance / mono.sensorParameters.maxDistance); // 0.0 to 1.0
-                mono.imageParameters.lidarTextureByteBuffer[i] = (byte)(int)(pseudoValue * 255);
-                //if (i % 1000 == 0) { Debug.Log((byte)(int)(pseudoValue * 255)); }
+                // Calculate the 16-bit colour of the resulting pixel. Make non-hits black and others fade in from gloom ooo spooky
+                ushort value16 = 0;
+                if(hit.collider != null)
+                {
+                    float pseudoValue = 1 - hit.distance / mono.sensorParameters.maxDistance; // 0.0 to 1.0
+                    value16 = (ushort)(DecodeMappingCurve(mono.imageParameters.mappingCurve)(pseudoValue, mono.imageParameters.a) * 65535f);
+                }
+                // Remember the expected byte buffer in 16-bit format uses two bytes per pixel so the buffer size is twice as large as the pixel conut. "little-endian" order: low byte then high byte.
+                int i2 = i * 2;
+                mono.imageParameters.lidarTextureByteBuffer[i2] = (byte)(value16 & 0xFF); // Bitmask AND the 16-bit value with 8-bit [11111111] to take the low byte.
+                mono.imageParameters.lidarTextureByteBuffer[i2 + 1] = (byte)((value16 >> 8) & 0xFF); // Do the same but make eight right shifts first. Thanks to Stack Overflow for this one.
             }
 
             // Apply the byte buffer and comit the changes to the texture
@@ -367,14 +393,14 @@ public static class LiDARStatic
             mono.imageParameters.lidarTexture = new Texture2D(
                 width: newImgSize,
                 height: newImgSize,
-                textureFormat: TextureFormat.R8,
+                textureFormat: TextureFormat.R16,
                 mipChain: false);
             mono.imageParameters.lidarTexture.filterMode = FilterMode.Point;
             mono.imageParameters.lidarUIImage.texture = mono.imageParameters.lidarTexture;
 
             // Calculate and record now-unchanging values used during texture updates
             mono.imageParameters.lidarTexturePixelCount = newImgSize * newImgSize;
-            mono.imageParameters.lidarTextureByteBuffer = new byte[mono.imageParameters.lidarTexturePixelCount];
+            mono.imageParameters.lidarTextureByteBuffer = new byte[mono.imageParameters.lidarTexturePixelCount * 2];
             mono.imageParameters.lidarTextureMappedIndexes = new int[mono.imageParameters.lidarTexturePixelCount];
             float pixelMappingScale = (float)mono.nativeArrays.totalRayCount / mono.imageParameters.lidarTexturePixelCount;
             for (int i = 0; i < mono.imageParameters.lidarTexturePixelCount; i++)

@@ -59,6 +59,11 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public bool generateLiDARImage = true;
         [Tooltip("The UnityEngine.UI.Image component the generated image feeds to.")]
         public RawImage lidarUIImage;
+        [Tooltip("The colour mapping curve used to translate between distance and pixel colour.")]
+        public LiDARImageGeneration.MappingCurve mappingCurve = LiDARImageGeneration.MappingCurve.Exponential;
+        [Tooltip("A variable used in the colour curve calculations.")]
+        [Range(0.05f, 8)]
+        public float a = 0.4f;
         [Tooltip("The maximum resolution of the output image. If the LiDAR point cloud data array has a smaller size than this value the resulting image will be smaller.")]
         public LiDARImageGeneration.ImageResolution maxResolution = LiDARImageGeneration.ImageResolution.Size512x512;
         [Tooltip("The refresh rate of the LiDAR image in Hz.")]
@@ -73,12 +78,9 @@ public class LiDARMonoBehaviour : MonoBehaviour
         [HideInInspector]
         public int[] lidarTextureMappedIndexes;
         [HideInInspector]
-        public byte[] lidarTextureByteBuffer;
+        public byte[] lidarTextureByteBuffer;   // TextureFormat.R16 uses two bytes per pixel.
 
         // Track the Inspector parameters for changes over time
-        //private bool lastGenerateLiDARImage;
-        //private RawImage lastLidarUIImage;
-        //private LiDARImageGeneration.ImageResolution lastMaxResolution;
         private LiDARImageGeneration.ImageResolution lastMaxResolution;
         private float lastImageRefreshRate;
         public bool HasChanged()
