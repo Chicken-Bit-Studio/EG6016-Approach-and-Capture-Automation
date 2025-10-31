@@ -10,7 +10,6 @@ using static StaticUtilities;
 
 /// <summary>
 /// LiDAR Static class. Also see LiDARMonoBehaviour.
-/// An oversight: This fails if more than one LiDAR sensor is running in the scene at any given time, due to single static instances of each native array.
 /// </summary>
 public static class LiDARStatic
 {
@@ -180,9 +179,28 @@ public static class LiDARStatic
                     raycastCommands[i] = new RaycastCommand(raysOrigin, wsDirs[i], qp, maxDistance);
                 }
             }
+            public struct UpdateOutputArraysJob : IJobParallelFor
+            {
+                [ReadOnly] public NativeArray<RaycastHit> rayHits;
+                public float3 emitterPos;
+                public quaternion emitterInverseRot;
+                public NativeArray<float> hitDists;
+                public NativeArray<float3> lsHitPoints;
+                public void Execute(int i)
+                {
+                    var hit = rayHits[i];
+                    hitDists[i] = hit.distance;
+                    // Convert the worldsapce hit coordinates to emitter local space
+                    lsHitPoints[i] = math.mul(emitterInverseRot, new float3(
+                        hit.point.x - emitterPos.x,
+                        hit.point.y - emitterPos.y,
+                        hit.point.z - emitterPos.z
+                    ));
+                }
+            }
         }
-        // Get a NativeArray<float3> object for the given sensor parameters. This array is generated once and not changed outside of sensor parameter updates.
-        public static void GenerateLocalspaceDirsNativeArray(LiDARMonoBehaviour monoBehaviourInstance)
+        // Get fresh native array objects for the given sensor parameters. These arrays are generated once and not changed outside of sensor parameter updates.
+        public static void GenerateFreshNativeArrays(LiDARMonoBehaviour monoBehaviourInstance)
         {
             // Create a shorter alias for readability
             var mono = monoBehaviourInstance;
@@ -200,6 +218,8 @@ public static class LiDARStatic
             mono.nativeArrays.worldspaceDirs = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             mono.nativeArrays.raycastCommands = new NativeArray<RaycastCommand>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             mono.nativeArrays.raycastHits = new NativeArray<RaycastHit>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.hitDistances = new NativeArray<float>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.hitPointsInLocalSpace = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
             // Loop through the .bin file and populate the float3 native array
             for (int i = 0; i < count; i++)
@@ -209,6 +229,9 @@ public static class LiDARStatic
                 float z = br.ReadSingle();
                 mono.nativeArrays.localspaceDirs[i] = new float3(x, y, z);
             }
+
+            // Close the BinaryReader
+            br.Close();
         }
         // Schedule and run a Burst-based sequence of tasks - perform a LiDAR scan!
         public static ref JobHandle ScheduleAndRunLiDARRaycasts(LiDARMonoBehaviour monoBehaviourInstance)
@@ -216,8 +239,11 @@ public static class LiDARStatic
             // Create a shorter alias for readability
             var mono = monoBehaviourInstance;
 
-            // Ensure the proper localspace ray directions array has been populated
-            if (!mono.nativeArrays.localspaceDirs.IsCreated) { GenerateLocalspaceDirsNativeArray(mono); }
+            // Ensure the proper localspace ray directions array has been populated.
+            if (!mono.nativeArrays.localspaceDirs.IsCreated) { GenerateFreshNativeArrays(mono); }
+
+            // Calculate the inverse of the emitter's current rotation. This is used in the UpdateOutputArraysJob job.
+            quaternion emitterInverseRotation = math.inverse(mono.sensorParameters.emitter.rotation);
 
             // Create and schedule a RotateRayDirectionsJob task
             var rotateRayDirectionsJob = new JobStructures.RotateRayDirectionsJob
@@ -240,12 +266,23 @@ public static class LiDARStatic
             JobHandle buildRaycastCommandsJob_jobHandle = buildRaycastCommandsJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, rotateRayDirectionsJob_jobHandle);
 
             // Schedule the actual batched raycast physics processes
-            mono.nativeArrays.lastJobHandle = RaycastCommand.ScheduleBatch(
+            JobHandle performRaycastingJob_jobHandle = RaycastCommand.ScheduleBatch(
                 mono.nativeArrays.raycastCommands,
                 mono.nativeArrays.raycastHits,
                 mono.nativeArrays.idealBatchSize,
                 buildRaycastCommandsJob_jobHandle
             );
+
+            // Schedule the collection of results into the appropriate arrays
+            var updateOutputArraysJob = new JobStructures.UpdateOutputArraysJob
+            {
+                rayHits = mono.nativeArrays.raycastHits,
+                emitterPos = (float3)mono.sensorParameters.emitter.position,
+                emitterInverseRot = emitterInverseRotation,
+                hitDists = mono.nativeArrays.hitDistances,
+                lsHitPoints = mono.nativeArrays.hitPointsInLocalSpace
+            };
+            mono.nativeArrays.lastJobHandle = updateOutputArraysJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, performRaycastingJob_jobHandle);
 
             // Allow for ray drawing as a debugging tool. Slow.
             if (mono.debuggingSettings.drawRays)
@@ -323,6 +360,7 @@ public static class LiDARStatic
         }
         public static Func<float, float, float> DecodeMappingCurve(MappingCurve enumMappingCurve)
         {
+            // A switch statement returning various lambda functions for distance-shade mapping.
             switch (enumMappingCurve)
             {
                 case MappingCurve.Linear:
@@ -332,7 +370,7 @@ public static class LiDARStatic
                 case MappingCurve.Reciprocal:
                     return (v, a) => 1f / (1f + a * v);
                 case MappingCurve.Logarithmic:
-                    return (v, a) => Mathf.Log10(1f + a * (1f - v)) / Mathf.Log10(1f + a);
+                    return (v, a) => 1f - Mathf.Log10(1f + a * (1f - v)) / Mathf.Log10(1f + a);
                 case MappingCurve.GammaCorrection:
                     return (v, a) => Mathf.Pow(v, a);
                 default:
@@ -342,12 +380,6 @@ public static class LiDARStatic
         }
         public static void UpdateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
         {
-            // Optimisation target
-
-            // Start a stopwatch for debugging purposes
-            //var stopwatch = new System.Diagnostics.Stopwatch();
-            //stopwatch.Start();
-
             // Create a shorter alias for readability
             var mono = monoBehaviourInstance;
 
@@ -376,11 +408,6 @@ public static class LiDARStatic
             // Apply the byte buffer and comit the changes to the texture
             mono.imageParameters.lidarTexture.LoadRawTextureData(mono.imageParameters.lidarTextureByteBuffer);
             mono.imageParameters.lidarTexture.Apply();
-
-            // Report to console
-            //stopwatch.Stop();
-            //Debug.Log($"Texture update took {FormatStopwatchDuration(stopwatch)} with {mono.imageParameters.lidarTexturePixelCount} pixels and {mono.nativeArrays.CountRayHits()} hits out of {mono.nativeArrays.totalRayCount} rays.");
-
         }
         private static void RegenerateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
         {

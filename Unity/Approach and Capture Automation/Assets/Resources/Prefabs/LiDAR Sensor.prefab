@@ -54,10 +54,17 @@ MonoBehaviour:
   imageParameters:
     generateLiDARImage: 1
     lidarUIImage: {fileID: 0}
+    mappingCurve: 3
+    a: 0.4
     maxResolution: 0
-    imageRefreshRate: 8
+    maxRefreshRate: 8
     imageRefreshPeriod: 0.125
     lidarTexture: {fileID: 0}
+    lidarTexturePixelCount: 0
+    lidarTextureMappedIndexes: 
+    lidarTextureByteBuffer: 
+  debuggingSettings:
+    drawRays: 0
 --- !u!1 &1736762378376204491
 GameObject:
   m_ObjectHideFlags: 0

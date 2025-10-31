@@ -17,6 +17,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
         [Header("LiDAR Initialisation Settings")]
         [Tooltip("Transform of the LiDAR emitter. Rays are cast in this transform's +y direction.")]
         public Transform emitter;
+        [HideInInspector]
+        public quaternion inverseRotation = new();
         [Tooltip("Should the LiDAR raycasts ignore colliders on parent objects of the emitter?")]
         public bool ignoreParentColliders = true;
 
@@ -117,6 +119,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public NativeArray<float3> worldspaceDirs;
         public NativeArray<RaycastCommand> raycastCommands;
         public NativeArray<RaycastHit> raycastHits;
+        public NativeArray<float> hitDistances;
+        public NativeArray<float3> hitPointsInLocalSpace;
         public JobHandle lastJobHandle;
 
         public void DisposeAll()
@@ -129,6 +133,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
             if (worldspaceDirs.IsCreated) worldspaceDirs.Dispose();
             if (raycastCommands.IsCreated) raycastCommands.Dispose();
             if (raycastHits.IsCreated) raycastHits.Dispose();
+            if (hitDistances.IsCreated) hitDistances.Dispose();
+            if (hitPointsInLocalSpace.IsCreated) hitPointsInLocalSpace.Dispose();
         }
         public NativeArrays()
         {
