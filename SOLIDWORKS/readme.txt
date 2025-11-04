@@ -1,0 +1,1 @@
+I can only export SOLIDWORKS part and assembly files to .stl at this time without access to SOLIDWORKS Visualize. Exported meshes are reconstructed with a seperate script workflow Unity-side (see Assets->Editor) and relevant visual materials are applied there. Therefore, colour and material data assigned in SOLIDWORKS is useless.

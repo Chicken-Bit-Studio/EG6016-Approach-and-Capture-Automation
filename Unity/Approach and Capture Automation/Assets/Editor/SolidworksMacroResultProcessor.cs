@@ -197,6 +197,7 @@ public static class SolidworksMacroResultProcessor
             meshFilter.sharedMesh = mesh;
             meshRenderer.sharedMaterial = AssetReferences.segmentMaterial;  // TODO: Use segmentMaterial or servoMaterial based on segmentProfile.type. Don't rework this whole bloody thing - just add logic here!
             meshCollider.sharedMesh = mesh;
+            meshCollider.convex = true;
             gameObject.tag = "ModelSegment";
 
             // Giving the new GameObject an accessible and populated container for custom structures found in DataStructures.

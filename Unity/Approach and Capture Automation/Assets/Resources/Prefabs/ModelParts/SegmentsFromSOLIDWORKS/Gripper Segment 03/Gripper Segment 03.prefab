@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4457667791285645127
+--- !u!1 &2982519863512623002
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,11 +8,11 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3646774410242921808}
-  - component: {fileID: 7606015739895814309}
-  - component: {fileID: 3558937507618146471}
-  - component: {fileID: 1808038642680271399}
-  - component: {fileID: 4897920643441373687}
+  - component: {fileID: 2871570550960904200}
+  - component: {fileID: 2612769165797933843}
+  - component: {fileID: 9096074470385452894}
+  - component: {fileID: 2196584579015961742}
+  - component: {fileID: 8988295468587206181}
   m_Layer: 0
   m_Name: Gripper Segment 03
   m_TagString: ModelSegment
@@ -20,37 +20,37 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3646774410242921808
+--- !u!4 &2871570550960904200
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4457667791285645127}
+  m_GameObject: {fileID: 2982519863512623002}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7275150232879245333}
+  - {fileID: 2671478091301361493}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7606015739895814309
+--- !u!33 &2612769165797933843
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4457667791285645127}
+  m_GameObject: {fileID: 2982519863512623002}
   m_Mesh: {fileID: 4300000, guid: 9a473144182afe44d81a99a403ca355a, type: 2}
---- !u!23 &3558937507618146471
+--- !u!23 &9096074470385452894
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4457667791285645127}
+  m_GameObject: {fileID: 2982519863512623002}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -86,13 +86,13 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &1808038642680271399
+--- !u!64 &2196584579015961742
 MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4457667791285645127}
+  m_GameObject: {fileID: 2982519863512623002}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -105,56 +105,30 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 9a473144182afe44d81a99a403ca355a, type: 2}
---- !u!114 &4897920643441373687
+--- !u!114 &8988295468587206181
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4457667791285645127}
+  m_GameObject: {fileID: 2982519863512623002}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelProfile:
-    modelName: 
-    description: 
-    rootSegment:
-      segmentName: 
-      nodes: []
-  segmentProfile:
-    segmentName: Gripper Segment 03
-    nodes:
-    - transformationMatrix:
-      - 0
-      - 0
-      - 1
-      - 0
-      - 1
-      - 0
-      - -1
-      - 0
-      - 0
-      - 0
-      - 0.3657967
-      - 0
-      - 1
-      - 0
-      - 0
-      - 0
-  attachmentNode:
-    transformationMatrix: []
---- !u!1001 &2223619963112591450
+  thingType: RoboticsDataClasses+ModelElements+SegmentProfile
+  typeOverride: 0
+--- !u!1001 &6863374986117426970
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3646774410242921808}
+    m_TransformParent: {fileID: 2871570550960904200}
     m_Modifications:
     - target: {fileID: 8458944609434189983, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
       propertyPath: m_Name
@@ -205,8 +179,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
---- !u!4 &7275150232879245333 stripped
+--- !u!4 &2671478091301361493 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8803802815569147983, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
-  m_PrefabInstance: {fileID: 2223619963112591450}
+  m_PrefabInstance: {fileID: 6863374986117426970}
   m_PrefabAsset: {fileID: 0}
