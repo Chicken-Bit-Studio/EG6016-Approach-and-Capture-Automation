@@ -181,7 +181,7 @@ public static class SolidworksMacroResultProcessor
             Directory.CreateDirectory(finalPrefabLocationPath);
             
             // Deserialize the JSON file to get a SegmentProfile object.
-            SegmentProfile segmentProfile = Newtonsoft.Json.JsonConvert.DeserializeObject<SegmentProfile>(
+            ModelElements.SegmentProfile segmentProfile = Newtonsoft.Json.JsonConvert.DeserializeObject<ModelElements.SegmentProfile>(
                 File.ReadAllText(Directory.GetFiles(solidworksMacroResultItemPath, "*.json").FirstOrDefault()));
             //Debug.Log($"SegmentProfile (first read) of {segmentProfile.segmentName}:\n" + File.ReadAllText(Directory.GetFiles(solidworksMacroResultItemPath, "*.json").FirstOrDefault()));
             
@@ -219,7 +219,7 @@ public static class SolidworksMacroResultProcessor
             // If the segment has any attachment nodes, instantiate the node prefab for each node and set their positions and rotations based on the transformation matrices in the SegmentProfile.
             if (segmentProfile.nodes != null)
             {
-                foreach (AttachmentNode attachmentNode in segmentProfile.nodes)
+                foreach (ModelElements.AttachmentNode attachmentNode in segmentProfile.nodes)
                 {
                     GameObject nodeGameObject = (GameObject)PrefabUtility.InstantiatePrefab(AssetReferences.nodePrefab);
                     nodeGameObject.transform.SetParent(gameObject.transform);

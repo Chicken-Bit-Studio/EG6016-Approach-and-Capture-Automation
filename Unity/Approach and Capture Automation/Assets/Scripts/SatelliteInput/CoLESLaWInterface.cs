@@ -1,18 +1,15 @@
 using UnityEngine;
+using static RoboticsDataClasses;
 
+[ExecuteAlways]
 public class CoLESLaWInterface : MonoBehaviour
 {
-    public int hehe = 61;
-    
-    // Start is called before the first frame update
+    // Model interface class instance
+    public IModel modelInterface;
+
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Create a new ModelIO instance to interface with this gameobject and its features.
+        modelInterface = new IModel(this.gameObject);
     }
 }

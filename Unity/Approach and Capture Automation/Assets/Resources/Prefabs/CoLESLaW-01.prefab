@@ -183,7 +183,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2248c13f3e8d6c7429690dc8ea0a4689, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hehe: 61
+  modelInterface:
+    model: {fileID: 7921491297791191644}
+    sensors:
+      lidarCount: 0
+      lidars: []
+    plants:
+      actuatorCount: 0
+      actuators: []
+      thrusterCount: 0
+      thrusters: []
 --- !u!54 &6375087413674695494
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -2,7 +2,7 @@ using UnityEngine;
 using static SignalDynamics;
 
 [RequireComponent(typeof(LineRenderer))]
-public class Thruster : MonoBehaviour
+public class ThrusterMonoBehaviour : MonoBehaviour
 {
     [Header("Thruster Properties")]
     [Tooltip("The maximum thrust the thruster can produce in newtons.")]
@@ -12,7 +12,7 @@ public class Thruster : MonoBehaviour
     [Header("Manual Controls")]
     [Tooltip("Think Kerbal Space Program RCS control scheme. QWEASD")]
     public KeyCode attitude = KeyCode.None;
-    public KeyCode attitude2 = KeyCode.None;
+    public KeyCode attitude2 = KeyCode.None;    // Use two to allow roll
     [Tooltip("Think Kerbal Space Program RCS control scheme. IHJKLN")]
     public KeyCode translation = KeyCode.None;
 
@@ -53,7 +53,6 @@ public class Thruster : MonoBehaviour
         if (output != 0) { rb.AddForceAtPosition(output * thrusterPower * -transform.forward, transform.position, ForceMode.Force); }
         // Depict the thruster's activity as a plume
         lr.SetPosition(1, maxPlumeLength * output * Vector3.forward);
-
         // Report this thruster's state to console if ordered to do so
         if (debuggingMode) { Debug.Log($"input: {input}, output: {output}"); }
     }
