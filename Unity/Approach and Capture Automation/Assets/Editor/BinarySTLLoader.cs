@@ -24,15 +24,18 @@ public static class BinarySTLLoader
                 return 0.001f;          // Convert from Unity units to mm
             case LengthUnits.Centimeters:
                 return 0.01f;           // Convert from Unity units to m
-            case LengthUnits.Meters:        
+            case LengthUnits.Meters:
                 return 1.0f;            // Unity units are already in meters (1:1)
             default:
                 return 1.0f;            // Default to meters if no case matches
         }
     }
-    
+
     public static Mesh LoadBinarySTL(string path, LengthUnits stlBaseUnits)
     {
+
+        // Invert the 'Z' coordinate throughout to account for the SLDWKS-Unity triad mismatch
+
         float scaleFactor = GetScaleFactor(stlBaseUnits);
 
         if (!File.Exists(path)) return null;
@@ -50,28 +53,36 @@ public static class BinarySTLLoader
 
             for (uint i = 0; i < triangleCount; i++)
             {
-                // Read normal vector
+                // Read and mirror normal vector
                 Vector3 normal = new Vector3(
                     reader.ReadSingle(),
                     reader.ReadSingle(),
-                    reader.ReadSingle());
+                    -reader.ReadSingle()); // Mirror Z
                 normals.Add(normal);
                 normals.Add(normal);
                 normals.Add(normal);
 
-                // Read vertices
+                // Read and mirror vertices
                 for (int j = 0; j < 3; j++)
                 {
                     Vector3 vertex = new Vector3(
                         reader.ReadSingle() * scaleFactor,
                         reader.ReadSingle() * scaleFactor,
-                        reader.ReadSingle() * scaleFactor);
-                    
+                        -reader.ReadSingle() * scaleFactor); // Mirror Z
+
                     vertices.Add(vertex);
                     triangles.Add(vertexIndex++);
                 }
 
                 reader.ReadUInt16(); // Skip attribute byte count
+            }
+
+            // Fix winding order after mirroring
+            for (int i = 0; i < triangles.Count; i += 3)
+            {
+                int temp = triangles[i + 1];
+                triangles[i + 1] = triangles[i + 2];
+                triangles[i + 2] = temp;
             }
         }
 
@@ -80,7 +91,7 @@ public static class BinarySTLLoader
         mesh.triangles = triangles.ToArray();
         mesh.normals = normals.ToArray();
         mesh.RecalculateBounds();
-        
+
         return mesh;
     }
 }

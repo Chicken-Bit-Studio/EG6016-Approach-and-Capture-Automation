@@ -106,25 +106,25 @@ public static class RoboticsDataClasses
         {
             [Header("Model Input Device Resister")]
             [ReadOnly] public int lidarCount = 0;
-            [HideInInspector] public Interfaces.Sensors.ILiDAR[] lidars;
+            [HideInInspector] public Interfaces.ISensors.ILiDAR[] lidars;
         }
         [System.Serializable]
         public class Plants
         {
             [Header("Model Output Device Resister")]
             [ReadOnly] public int actuatorCount = 0;
-            [HideInInspector] public Interfaces.Plants.IActuator[] actuators;
+            [HideInInspector] public Interfaces.IPlants.IActuator[] actuators;
             [ReadOnly] public int thrusterCount = 0;
-            [HideInInspector] public Interfaces.Plants.IThruster[] thrusters;
+            [HideInInspector] public Interfaces.IPlants.IThruster[] thrusters;
         }
         private void RegisterIODevices(GameObject model)
         {
             // Find all of the ContainerClass instances on the current gameobject
             // Model input classes (sensors)
-            List<Interfaces.Sensors.ILiDAR> lList = new();
+            List<Interfaces.ISensors.ILiDAR> lList = new();
             // Model output classes (plants)
-            List<Interfaces.Plants.IActuator> aList = new();
-            List<Interfaces.Plants.IThruster> tList = new();
+            List<Interfaces.IPlants.IActuator> aList = new();
+            List<Interfaces.IPlants.IThruster> tList = new();
             foreach (ContainerClass cc in model.GetComponentsInChildren<ContainerClass>())
             {
                 // Add the output classes we find to a temporary list. Ignore other classes.
@@ -132,20 +132,20 @@ public static class RoboticsDataClasses
                 {
                     // Model input classes (sensors)
                     case ModelElements.LiDAR l:                             // For each applicable object found in a container class:
-                        lList.Add(new Interfaces.Sensors.ILiDAR(            // Create a new instance of the associated Interface class and add it to the associated list.
+                        lList.Add(new Interfaces.ISensors.ILiDAR(            // Create a new instance of the associated Interface class and add it to the associated list.
                             cc.GetComponent<LiDARMonoBehaviour>(),
                             l
                         ));
                         break;
                     // Model output classes (plants)
                     case ModelElements.Actuator a:
-                        aList.Add(new Interfaces.Plants.IActuator(
+                        aList.Add(new Interfaces.IPlants.IActuator(
                             cc.GetComponent<ActuatorMonoBehaviour>(),
                             a
                         ));
                         break;
                     case ModelElements.Thruster t:
-                        tList.Add(new Interfaces.Plants.IThruster(
+                        tList.Add(new Interfaces.IPlants.IThruster(
                             cc.GetComponent<ThrusterMonoBehaviour>(),
                             t
                         ));
@@ -172,7 +172,7 @@ public static class RoboticsDataClasses
         /// <summary>
         /// Sensors are the model's eyes and ears. They include anything dedicated to data collection. Pressure pads, liDARs, cameras, and microphones are all considered 'sensors' in this regime.
         /// </summary>
-        public static class Sensors
+        public static class ISensors
         {
             public class ILiDAR
             {
@@ -189,7 +189,7 @@ public static class RoboticsDataClasses
         /// <summary>
         /// Plants are the model's output devices. They include any outlet that changes the model's state. Thrusters, lights, speakers, angular and linear actuators are all considered 'plants' in this regime.
         /// </summary>
-        public static class Plants
+        public static class IPlants
         {
             public class IActuator
             {
