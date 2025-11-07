@@ -84,8 +84,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thingType: '[unassigned]'
-  typeOverride: 1
+  thingTypeString: ModelProfile
+  typeOverride: 5
 --- !u!1 &1736762378376204491
 GameObject:
   m_ObjectHideFlags: 0

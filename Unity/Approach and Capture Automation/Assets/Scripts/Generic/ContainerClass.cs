@@ -3,7 +3,7 @@ using UnityEngine;
 using static RoboticsDataClasses;
 using System.Linq;
 
-[ExecuteAlways]
+//[ExecuteAlways]
 public class ContainerClass : MonoBehaviour
 {
     /*[Header("Use only one of the following:")]
@@ -13,7 +13,8 @@ public class ContainerClass : MonoBehaviour
     public Thruster thruster = null;*/
 
     [Header("Object Overview")]
-    [ReadOnly] public string thingType = "[unassigned]";
+    [ReadOnly] public Type thingType = null;
+    [ReadOnly] public string thingTypeString = "[unassigned]";
 
     [Header("Object Details")]
     public object thing = null;
@@ -21,7 +22,7 @@ public class ContainerClass : MonoBehaviour
     [Header("Type Override")]
     [Tooltip("Setting this to anything other than 'None' will overwrite this component's value with an empty instance of the corresponding class.")]
     public TypeOverrides typeOverride = TypeOverrides.None;
-    public enum TypeOverrides { None, LiDAR, Actuator, Thruster };
+    public enum TypeOverrides { None, ModelProfile, SegmentProfile, AttachmentNode, Actuator, LiDAR, Thruster };
 
     // A list of allowed types for the container class to receive
     private static readonly Type[] validTypes = {
@@ -40,17 +41,26 @@ public class ContainerClass : MonoBehaviour
         {
             switch (typeOverride)
             {
-                case TypeOverrides.LiDAR:
-                    thing = new ModelElements.LiDAR();
+                case TypeOverrides.ModelProfile:
+                    SetValue(new ModelElements.ModelProfile("", "", null));
+                    break;
+                case TypeOverrides.SegmentProfile:
+                    SetValue(new ModelElements.SegmentProfile("", null));
+                    break;
+                case TypeOverrides.AttachmentNode:
+                    SetValue(new ModelElements.AttachmentNode(null));
                     break;
                 case TypeOverrides.Actuator:
-                    thing = new ModelElements.Actuator();
+                    SetValue(new ModelElements.Actuator());
+                    break;
+                case TypeOverrides.LiDAR:
+                    SetValue(new ModelElements.LiDAR());
                     break;
                 case TypeOverrides.Thruster:
-                    thing = new ModelElements.Thruster();
+                    SetValue(new ModelElements.Thruster());
                     break;
                 default:
-                    Debug.LogError("Unrecognized MappingCurve enum value: " + Enum.GetName(typeof(TypeOverrides), typeOverride));
+                    Debug.LogError("Unrecognized TypeOverrides enum value: " + Enum.GetName(typeof(TypeOverrides), typeOverride));
                     break;
             }
         }
@@ -90,7 +100,8 @@ public class ContainerClass : MonoBehaviour
         {
             // Assign the new object and update the thing's type name in the Inspector
             thing = input;
-            thingType = input.GetType().FullName;
+            thingType = inputtedType;
+            thingTypeString = inputtedType.Name;
         }
         else
         {

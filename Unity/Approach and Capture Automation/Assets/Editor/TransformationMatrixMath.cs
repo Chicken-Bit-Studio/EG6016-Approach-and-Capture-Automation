@@ -7,11 +7,26 @@ public static class TransformationMatrixMath
 
     // https://help.solidworks.com/2020/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IMathTransform.html
     // This document breaks down the principles behind transformation matrices. SOLIDWORKS supplies this as a flat array in a particular layout, so be careful.
+
+    // Note: (06-NOV-2025) SOLIDWORKS and Unity use different axial triad arrangements.
+    // Do the hand thing as in Flemming's Left Hand Law:
+    //      SOLIDWORKS:              Unity:
+    //      X: Index finger          X: Middle finger
+    //      Y: Thumb                 Y: Thumb
+    //      Z: Middle finger         Z: Index finger
+    // Recall that:
+    //      X-Axis: Axis of rotation of the subsequent SegmentProfile, passing through its geometrical origin.
+    //      Y-Axis: The intended initial "up" direction of the subsequent SegmentProfile, used to standardise part aspect ratio geometry.
+    //      Z-Axis: Points towards the "positive" direction of rotation of the subsequent SegmentProfile.
+    // In effect, we must choose to discard one either our 'X' or 'Z' axial conventions in favour of the other.
+    // We choose to eliminate the 'Z' axial convention Unity-side.
+    
     public static Vector3 ExtractPosition(float[] matrix)
     {
         // We don't need to scale this. SldWorks already accounts for the model units in the transformation matrix.
         // Assumes row-major flattened 4x4: index = row * 4 + col
-        return new Vector3(matrix[9], matrix[10], matrix[11]);
+        // Invert the 'Z' coordinate to account for the SLDWKS-Unity triad mismatch
+        return new Vector3(matrix[9], matrix[10], -matrix[11]);
     }
     public static Quaternion ExtractQuaternion(float[] matrix)
     {
@@ -23,7 +38,7 @@ public static class TransformationMatrixMath
 
         // Standard algorithm to convert a 3x3 rotation matrix to a Quaternion.
         float trace = m00 + m11 + m22;
-        Quaternion q = new Quaternion();
+        Quaternion q = new();
 
         if (trace > 0.0f)
         {

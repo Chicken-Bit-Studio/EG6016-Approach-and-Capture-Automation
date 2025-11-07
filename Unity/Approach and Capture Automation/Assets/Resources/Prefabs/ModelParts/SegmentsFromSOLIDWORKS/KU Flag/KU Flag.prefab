@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 602607956350414965}
   - component: {fileID: 4612981706682614822}
   - component: {fileID: 119121411369547923}
-  - component: {fileID: 387363447799825918}
   m_Layer: 0
   m_Name: KU Flag
   m_TagString: ModelSegment
@@ -107,17 +106,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: ed8180807a6063e4dbc29d6b2785288b, type: 2}
---- !u!114 &387363447799825918
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2482569833579984655}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingType: RoboticsDataClasses+ModelElements+SegmentProfile
-  typeOverride: 0

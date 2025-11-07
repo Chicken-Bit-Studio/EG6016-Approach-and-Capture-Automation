@@ -118,14 +118,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelProfile:
-    modelName: 
-    description: 
-    rootSegment:
-      segmentName: 
-      nodes: []
-  segmentProfile:
-    segmentName: 
-    nodes: []
-  attachmentNode:
-    transformationMatrix: []
+  thingTypeString: '[unassigned]'
+  typeOverride: 3

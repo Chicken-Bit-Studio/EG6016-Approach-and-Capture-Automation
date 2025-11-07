@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 5384454237236985663}
   - component: {fileID: 4067848379174857113}
   - component: {fileID: 7566572663334728999}
-  - component: {fileID: 5971696734257762345}
   m_Layer: 0
   m_Name: Solar Panel Panel Smaller
   m_TagString: ModelSegment
@@ -107,17 +106,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 7bed5b537494f7e48b0fdc6e2ec82a3e, type: 2}
---- !u!114 &5971696734257762345
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4494387025922999700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingType: RoboticsDataClasses+ModelElements+SegmentProfile
-  typeOverride: 0

@@ -47,9 +47,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   thrusterPower: 100
-  attitude: 0
-  attitude2: 0
-  translation: 0
   input: 0
   output: 0
   debuggingMode: 0
@@ -65,8 +62,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thingType: '[unassigned]'
-  typeOverride: 3
+  thingTypeString: AttachmentNode
+  typeOverride: 6
 --- !u!120 &2222591184963751162
 LineRenderer:
   serializedVersion: 2

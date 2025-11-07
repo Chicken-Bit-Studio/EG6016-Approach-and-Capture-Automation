@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 public static class RoboticsDataClasses
@@ -87,80 +90,194 @@ public static class RoboticsDataClasses
     [System.Serializable]
     public class IModel
     {
-        public GameObject model;
-        public Sensors sensors;
-        public Plants plants;
+        public GameObject modelRoot;
+        public ModelSensors sensors;
+        public ModelPlants plants;
 
         public IModel(GameObject modelInScene)
         {
             // Assign the model's gameobject
-            model = modelInScene;
+            modelRoot = modelInScene;
             // Create the IO classes
             sensors = new();
             plants = new();
             // Poll ContainerClass instances in the scene and populate the IO classes
-            RegisterIODevices(model);
+            RegisterIODevices(modelRoot);
         }
         [System.Serializable]
-        public class Sensors
+        public class ModelSensors
         {
             [Header("Model Input Device Resister")]
-            [ReadOnly] public int lidarCount = 0;
-            [HideInInspector] public Interfaces.ISensors.ILiDAR[] lidars;
+            [ReadOnly] public int sensorCount = 0;
+            public LiDARs lidars = new();
+            [System.Serializable]
+            public class LiDARs
+            {
+                [ReadOnly] public int lidarCount = 0;
+                [HideInInspector] public Interfaces.ISensors.ILiDAR[] array;
+
+            }
         }
         [System.Serializable]
-        public class Plants
+        public class ModelPlants
         {
             [Header("Model Output Device Resister")]
-            [ReadOnly] public int actuatorCount = 0;
-            [HideInInspector] public Interfaces.IPlants.IActuator[] actuators;
-            [ReadOnly] public int thrusterCount = 0;
-            [HideInInspector] public Interfaces.IPlants.IThruster[] thrusters;
+            [ReadOnly] public int plantCount = 0;
+            public Actuators actuators = new();
+            [System.Serializable]
+            public class Actuators
+            {
+                [ReadOnly] public int actuatorCount = 0;
+                [HideInInspector] public Interfaces.IPlants.IActuator[] array;
+            }
+            public Thrusters thrusters = new();
+            [System.Serializable]
+            public class Thrusters
+            {
+                [ReadOnly] public int thrusterCount = 0;
+                [HideInInspector] public Interfaces.IPlants.IThruster[] array;
+            }
         }
         private void RegisterIODevices(GameObject model)
         {
-            // Find all of the ContainerClass instances on the current gameobject
-            // Model input classes (sensors)
-            List<Interfaces.ISensors.ILiDAR> lList = new();
-            // Model output classes (plants)
-            List<Interfaces.IPlants.IActuator> aList = new();
-            List<Interfaces.IPlants.IThruster> tList = new();
-            foreach (ContainerClass cc in model.GetComponentsInChildren<ContainerClass>())
+            // Collect a list of all IModel sensors and plants leaf types
+            Type[] sensorsAndPlantClasses = StaticUtilities.GetClassTreeLeafTypes(new Type[] { typeof(ModelSensors), typeof(ModelPlants) });
+            // Iterate through each IO class, poll the gameobject for relevant monobehaviours and populate relevant fields
+            foreach (Type ioClass in sensorsAndPlantClasses)
             {
-                // Add the output classes we find to a temporary list. Ignore other classes.
-                switch (cc.thing)
+                // IO classes have members:
+                //  integer: The count of objects/interfaces of this type in the model
+                //  interface class array: array of (populated) corresponding interface classes
+
+                // First, collect a reference to this IModel's own instance of this ioClass so we can reassign to it later in this loop
+                object ioClassInstance = null;
+                // Look through this IModel's fields (sensors and plants)
+                foreach (FieldInfo iModelField in this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
                 {
-                    // Model input classes (sensors)
-                    case ModelElements.LiDAR l:                             // For each applicable object found in a container class:
-                        lList.Add(new Interfaces.ISensors.ILiDAR(            // Create a new instance of the associated Interface class and add it to the associated list.
-                            cc.GetComponent<LiDARMonoBehaviour>(),
-                            l
-                        ));
+                    object parent = iModelField.GetValue(this);
+                    if (parent == null) continue;
+
+                    // Search inside the nested fields of that parent (like sensors.lidars or plants.thrusters)
+                    FieldInfo nested = iModelField.FieldType
+                        .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                        .FirstOrDefault(f => f.FieldType == ioClass);
+
+                    if (nested != null)
+                    {
+                        ioClassInstance = nested.GetValue(parent);
                         break;
-                    // Model output classes (plants)
-                    case ModelElements.Actuator a:
-                        aList.Add(new Interfaces.IPlants.IActuator(
-                            cc.GetComponent<ActuatorMonoBehaviour>(),
-                            a
-                        ));
-                        break;
-                    case ModelElements.Thruster t:
-                        tList.Add(new Interfaces.IPlants.IThruster(
-                            cc.GetComponent<ThrusterMonoBehaviour>(),
-                            t
-                        ));
-                        break;
+                    }
                 }
+                if (ioClassInstance == null)
+                {
+                    Debug.LogError($"Couldn't locate an instance of {ioClass.Name} inside IModel.");
+                    continue;
+                }
+
+                // Collect all fields of this IModel IO class - public and private - except ones marked 'static'
+                FieldInfo[] ioClassFields = ioClass.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                // Collect the integer member. Note: This doesn't catch other integer types like long or uint
+                FieldInfo ioClassIntegerMember = ioClassFields.FirstOrDefault(f => f.FieldType == typeof(int));
+                // Collect the array member
+                FieldInfo ioClassArrayMember = ioClassFields.FirstOrDefault(f => f.FieldType.IsArray);
+                // Check that the two important class members have been identified without error
+                if (ioClassIntegerMember == null || ioClassArrayMember == null)
+                {
+                    Debug.LogError($"Missing expected fields on {ioClass.Name}: count or array field not found.");
+                    continue;
+                }
+                // Collect Interfaces class that corresponds to this IO class
+                Type interfaceType = ioClassArrayMember.FieldType.GetElementType();
+                if (interfaceType == null)
+                {
+                    Debug.LogError($"Array field on {ioClass.Name} has no element type.");
+                    continue;
+                }
+                // Get a constructor for the Interfaces class (must be public)
+                ConstructorInfo interfaceConstructor = interfaceType
+                    .GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+                    .FirstOrDefault();
+                if (interfaceConstructor == null)
+                {
+                    Debug.LogError($"No constructor found for {interfaceType.Name}.");
+                    continue;
+                }
+                // Find the MonoBehaviour-typed field inside the interface type
+                Type monoBehaviour = interfaceType
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                    .FirstOrDefault(f => typeof(MonoBehaviour).IsAssignableFrom(f.FieldType)).FieldType;
+                if (monoBehaviour == null)
+                {
+                    Debug.LogError($"No MonoBehaviour-derived field found inside {interfaceType.Name}.");
+                    continue;
+                }
+
+                // This concludes the 'collection phase' of this method. Congratulations.
+
+                // Create a temporary holding list for the Interface class instances
+                List<object> interfaceList = new();
+                // Poll the gameobject hierarchy 
+                foreach (Component found in model.GetComponentsInChildren(monoBehaviour))
+                {
+                    // Instantite an interface for this component and add it to the proper array
+                    interfaceList.Add(interfaceConstructor.Invoke(new object[] { found, null }));
+                }
+
+                // Create an array of these interface instances the long way (we can't use object-based list for end-value reassignment)
+                var arr = Array.CreateInstance(interfaceType, interfaceList.Count);
+                for (int i = 0; i < interfaceList.Count; i++) { arr.SetValue(interfaceList[i], i); }
+                // Assign the end values to this instance of IModel. It's been a pleasure, goodbye.
+                ioClassIntegerMember.SetValue(ioClassInstance, arr.Length);
+                ioClassArrayMember.SetValue(ioClassInstance, arr);
             }
-            // Re-cast the lists into pernament array objects and report their counts
-            // Model input classes (sensors)
-            sensors.lidars = lList.ToArray();
-            sensors.lidarCount = sensors.lidars.Length;
-            // Model output classes (plants)
-            plants.actuators = aList.ToArray();
-            plants.actuatorCount = plants.actuators.Length;
-            plants.thrusters = tList.ToArray();
-            plants.thrusterCount = plants.thrusters.Length;
+            // Begin counting up the total number of sensors and plant interfaces in this IModel object after all that ^
+            int totalSensors = 0;
+            int totalPlants = 0;
+            // Count all populated arrays inside ModelSensors
+            if (sensors != null)
+            {
+                foreach (FieldInfo f in typeof(ModelSensors)
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    object fieldVal = f.GetValue(sensors);
+                    if (fieldVal == null) continue;
+
+                    // Look inside nested classes like LiDARs
+                    foreach (FieldInfo nested in f.FieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (nested.FieldType.IsArray)
+                        {
+                            Array arr = nested.GetValue(fieldVal) as Array;
+                            if (arr != null) totalSensors += arr.Length;
+                        }
+                    }
+                }
+                sensors.sensorCount = totalSensors;
+            }
+            // Count all populated arrays inside ModelPlants
+            if (plants != null)
+            {
+                foreach (FieldInfo f in typeof(ModelPlants)
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    object fieldVal = f.GetValue(plants);
+                    if (fieldVal == null) continue;
+
+                    foreach (FieldInfo nested in f.FieldType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                    {
+                        if (nested.FieldType.IsArray)
+                        {
+                            Array arr = nested.GetValue(fieldVal) as Array;
+                            if (arr != null) totalPlants += arr.Length;
+                        }
+                    }
+                }
+                plants.plantCount = totalPlants;
+            }
+            // Report results in the Unity Console
+            Debug.Log($"IO registration complete for {model.name}:\n" +
+                      $"  Sensors detected: {totalSensors}\n" +
+                      $"  Plants detected:  {totalPlants}");
         }
     }
 

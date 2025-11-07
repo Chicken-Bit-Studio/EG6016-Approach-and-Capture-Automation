@@ -9,13 +9,6 @@ public class ThrusterMonoBehaviour : MonoBehaviour
     [Range(1f, 200)]
     public float thrusterPower = 100f;
 
-    /*[Header("Manual Controls")]
-    [Tooltip("Think Kerbal Space Program RCS control scheme. QWEASD")]
-    public KeyCode attitude = KeyCode.None;
-    public KeyCode attitude2 = KeyCode.None;    // Use two to allow roll
-    [Tooltip("Think Kerbal Space Program RCS control scheme. IHJKLN")]
-    public KeyCode translation = KeyCode.None;*/
-
     [Header("Value Tracking")]
     [Tooltip("The input signal to control the object's thrust. 0.0-1.0")]
     [Range(0f, 1f)]
@@ -39,12 +32,6 @@ public class ThrusterMonoBehaviour : MonoBehaviour
         lr = GetComponent<LineRenderer>();
         rb = transform.root.GetComponent<Rigidbody>();
     }
-    /*void Update()
-    {
-        // If either of the manual input keys assigned to this thruster are depressed, fire at maximum output.
-        if (Input.GetKeyUp(attitude) || Input.GetKeyUp(attitude2) || Input.GetKeyUp(translation)) { input = 0f; }
-        if (Input.GetKey(attitude) || Input.GetKey(attitude2) || Input.GetKey(translation)) { input = 1f; }
-    }*/
     void FixedUpdate()
     {
         // Compute the thruster's output this physics frame

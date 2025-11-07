@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 8571618856211628547}
   - component: {fileID: 4543977730021531386}
   - component: {fileID: 8327446857298826336}
-  - component: {fileID: 246560016692540510}
   m_Layer: 0
   m_Name: Solar Panel Boom
   m_TagString: ModelSegment
@@ -107,17 +106,3 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 17c7a9624d7f69c499b0afd00190a9b5, type: 2}
---- !u!114 &246560016692540510
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8909298211728137623}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingType: RoboticsDataClasses+ModelElements+SegmentProfile
-  typeOverride: 0

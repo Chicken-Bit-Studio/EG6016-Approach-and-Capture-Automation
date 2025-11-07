@@ -120,8 +120,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thingType: RoboticsDataClasses+ModelElements+SegmentProfile
-  typeOverride: 0
+  thingTypeString: '[unassigned]'
+  typeOverride: 2
 --- !u!1001 &7282453188807976223
 PrefabInstance:
   m_ObjectHideFlags: 0
