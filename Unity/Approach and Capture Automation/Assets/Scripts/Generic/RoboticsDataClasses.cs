@@ -94,6 +94,9 @@ public static class RoboticsDataClasses
         public ModelSensors sensors;
         public ModelPlants plants;
 
+        // Note: perhaps simply holding an array for each thing in Sensors or Plants is simpler.
+        // Unity Inspector shows array count anyway, so...? TODO: this
+
         public IModel(GameObject modelInScene)
         {
             // Assign the model's gameobject

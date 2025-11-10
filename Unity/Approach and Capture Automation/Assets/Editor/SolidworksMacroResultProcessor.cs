@@ -19,7 +19,7 @@ public static class SolidworksMacroResultProcessor
         {
             public static readonly string path_solidworksMacroResult = "Assets/Editor/SOLIDWORKSMacroResult";
             public static readonly string path_finalPrefabOutput = "Assets/Resources/Prefabs/ModelParts/SegmentsFromSOLIDWORKS";
-            public static readonly string path_intermediateMeshFolder = "Assets/Meshes";
+            public static readonly string path_intermediateMeshFolder = "Assets/Meshes/SOLIDWORKS";
             public static readonly string path_intermediateThumbnailFolder = "unused";
         }
         public static class Prefabs
@@ -200,7 +200,8 @@ public static class SolidworksMacroResultProcessor
             meshCollider.convex = true;
             gameObject.tag = "ModelSegment";
 
-            // Giving the new GameObject an accessible and populated container for custom structures found in DataStructures.
+            // [ContainerClass has been depreciated in favour of RoboticsDataClassses.Interfaces classes and reflection]
+            /*// Giving the new GameObject an accessible and populated container for custom structures found in DataStructures.
             ContainerClass segmentContainerClass = gameObject.AddComponent<ContainerClass>();
             string report = $"SP output from ContainerClass on {gameObject.name}:\n";
             bool isEmpty = segmentProfile == null;
@@ -215,8 +216,8 @@ public static class SolidworksMacroResultProcessor
             }
             Debug.Log(report);
             //segmentContainerClass.segmentProfile = segmentProfile;
-            segmentContainerClass.SetValue(segmentProfile);
-            
+            segmentContainerClass.SetValue(segmentProfile);*/
+
             // If the segment has any attachment nodes, instantiate the node prefab for each node and set their positions and rotations based on the transformation matrices in the SegmentProfile.
             if (segmentProfile.nodes != null)
             {

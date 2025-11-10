@@ -201,6 +201,12 @@ public class LiDARMonoBehaviour : MonoBehaviour
             // Proceed to use the raycast hit data at nativeArrays.raycastHits
             if (imageParameters.generateLiDARImage)
             {
+                if(imageParameters.lidarUIImage == null)
+                {
+                    Debug.LogWarning("LiDAR tried to generate an image, but no target texture has been set.");
+                    imageParameters.generateLiDARImage = false;
+                    continue;
+                }
                 secondsSinceImageUpdate += Time.deltaTime;
                 if (secondsSinceImageUpdate >= imageParameters.imageRefreshPeriod)
                 {

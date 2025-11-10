@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6356918450855477620}
   - component: {fileID: 7832107923621670400}
   - component: {fileID: 2279617898078413639}
-  - component: {fileID: 1992574867567832274}
+  - component: {fileID: 6901156693227532799}
   m_Layer: 0
   m_Name: Gripper Segment 03
   m_TagString: ModelSegment
@@ -108,20 +108,33 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: 9a473144182afe44d81a99a403ca355a, type: 2}
---- !u!114 &1992574867567832274
-MonoBehaviour:
+--- !u!54 &6901156693227532799
+Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7763246444852150959}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingTypeString: '[unassigned]'
-  typeOverride: 2
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.2
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!1001 &8661193363424281366
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -133,6 +146,14 @@ PrefabInstance:
     - target: {fileID: 8458944609434189983, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
       propertyPath: m_Name
       value: Node
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656590188217899231, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
+      propertyPath: angleMax
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 8656590188217899231, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
+      propertyPath: angleMin
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8803802815569147983, guid: fa365b0b59205b04c90c9a7286b3e335, type: 3}
       propertyPath: m_LocalPosition.x

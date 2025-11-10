@@ -401,7 +401,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e88aeeaa8a470fd4cb4360fbd0132ea9, type: 3}
---- !u!1001 &1014497093
+--- !u!1001 &1646700935
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -412,10 +412,6 @@ PrefabInstance:
     - target: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_Name
       value: CoLESLaW-01
-      objectReference: {fileID: 0}
-    - target: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
-      propertyPath: m_TagString
-      value: Untagged
       objectReference: {fileID: 0}
     - target: {fileID: 2520262525100258071, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: imageParameters.lidarUIImage
@@ -431,7 +427,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -6
+      value: -5.5
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -692,4 +688,4 @@ SceneRoots:
   - {fileID: 684930610}
   - {fileID: 91713133}
   - {fileID: 2068280366}
-  - {fileID: 1014497093}
+  - {fileID: 1646700935}

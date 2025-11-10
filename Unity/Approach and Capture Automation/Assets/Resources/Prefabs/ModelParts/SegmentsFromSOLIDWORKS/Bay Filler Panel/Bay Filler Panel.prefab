@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 4618850809279040404}
   - component: {fileID: 3143245601757403459}
   - component: {fileID: 1531071043789540056}
-  - component: {fileID: 5283675034700758811}
   m_Layer: 0
   m_Name: Bay Filler Panel
   m_TagString: ModelSegment
@@ -62,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4aa1efc3aafd64642a4c4b090e76747b, type: 2}
+  - {fileID: 2100000, guid: 7f5c12e1c98103540aeb873b4ad585c1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -84,25 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5283675034700758811
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7152461887987532844}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 2e3034625554c5d41bd3f37d24c11c58, type: 2}

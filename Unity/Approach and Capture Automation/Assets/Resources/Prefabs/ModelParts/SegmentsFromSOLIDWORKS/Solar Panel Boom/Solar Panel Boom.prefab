@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 6476903095777774563}
   - component: {fileID: 8571618856211628547}
   - component: {fileID: 4543977730021531386}
-  - component: {fileID: 8327446857298826336}
   m_Layer: 0
   m_Name: Solar Panel Boom
   m_TagString: ModelSegment
@@ -62,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4aa1efc3aafd64642a4c4b090e76747b, type: 2}
+  - {fileID: 2100000, guid: 5131927a992511a48ad1458e7051442b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -84,25 +83,3 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8327446857298826336
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8909298211728137623}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 1
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 17c7a9624d7f69c499b0afd00190a9b5, type: 2}

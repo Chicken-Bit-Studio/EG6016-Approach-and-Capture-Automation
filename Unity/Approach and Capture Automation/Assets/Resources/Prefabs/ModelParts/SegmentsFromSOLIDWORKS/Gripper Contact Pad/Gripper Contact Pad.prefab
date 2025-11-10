@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 6746390843348544472}
   - component: {fileID: 5079487703873338016}
   - component: {fileID: 2638527734199690142}
-  - component: {fileID: 1121463004370241345}
+  - component: {fileID: -89352067517102019}
   m_Layer: 0
   m_Name: Gripper Contact Pad
   m_TagString: ModelSegment
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4aa1efc3aafd64642a4c4b090e76747b, type: 2}
+  - {fileID: 2100000, guid: 5131927a992511a48ad1458e7051442b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -92,7 +92,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4292859921259931092}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: c945efebccdb99048bac0140954e9c71, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -107,17 +107,30 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: fb8659d99a812ac4b9d0d5671d6aef09, type: 2}
---- !u!114 &1121463004370241345
-MonoBehaviour:
+--- !u!54 &-89352067517102019
+Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4292859921259931092}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingTypeString: '[unassigned]'
-  typeOverride: 2
+  serializedVersion: 4
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.2
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

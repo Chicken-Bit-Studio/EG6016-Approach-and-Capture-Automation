@@ -1,7 +1,6 @@
 using UnityEngine;
 using static RoboticsDataClasses;
 
-[ExecuteAlways]
 public class CoLESLaWInterface : MonoBehaviour
 {
     // Model interface class instance
@@ -13,5 +12,10 @@ public class CoLESLaWInterface : MonoBehaviour
         modelInterface = new IModel(this.gameObject);
 
         // Now do cool stuff
+    }
+
+    void Update()
+    {
+        
     }
 }

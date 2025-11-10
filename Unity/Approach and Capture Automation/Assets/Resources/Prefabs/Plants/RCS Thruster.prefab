@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7588074964709756960}
   - component: {fileID: 7523324797946259432}
-  - component: {fileID: 3070253554593509374}
   - component: {fileID: 2222591184963751162}
   m_Layer: 0
   m_Name: RCS Thruster
@@ -48,22 +47,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   thrusterPower: 100
   input: 0
+  input_manual: 0
+  input_manual_isUpdated: 0
   output: 0
   debuggingMode: 0
---- !u!114 &3070253554593509374
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7719459283685685513}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  thingTypeString: AttachmentNode
-  typeOverride: 6
 --- !u!120 &2222591184963751162
 LineRenderer:
   serializedVersion: 2

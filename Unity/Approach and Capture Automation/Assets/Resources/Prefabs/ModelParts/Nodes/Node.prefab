@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8255018500100100704}
   - component: {fileID: 5846449911011925532}
   - component: {fileID: 5856633701632263304}
-  - component: {fileID: 8218078746243979405}
+  - component: {fileID: 8656590188217899231}
   m_Layer: 0
   m_Name: Node
   m_TagString: AttachmentNode
@@ -42,7 +42,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8458944609434189983}
-  m_Mesh: {fileID: 4300000, guid: c411d79b31de29549a1b6eb2b25c53bc, type: 2}
+  m_Mesh: {fileID: 4300000, guid: 0f87d6de966c810459d4c8d58bdb8ac5, type: 2}
 --- !u!23 &5846449911011925532
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -50,9 +50,9 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8458944609434189983}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
+  m_Enabled: 0
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
   m_MotionVectors: 1
@@ -95,10 +95,10 @@ SphereCollider:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 32
   m_ExcludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 23
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
@@ -106,7 +106,7 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.005
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8218078746243979405
+--- !u!114 &8656590188217899231
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -115,8 +115,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 8458944609434189983}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8490575e9ea356458210b7e3886c304, type: 3}
+  m_Script: {fileID: 11500000, guid: 8d2b3176fd6576e4c82a739d0528662e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thingTypeString: '[unassigned]'
-  typeOverride: 3
+  actuator:
+    rangeMin: 0
+    rangeMax: 0
+    torque: 0
+    power: 0
+  parent:
+    transform: {fileID: 0}
+    collider: {fileID: 0}
+    rigidbody: {fileID: 0}
+  child:
+    transform: {fileID: 0}
+    collider: {fileID: 0}
+    rigidbody: {fileID: 0}
+    hingeJoint: {fileID: 0}
+  ignoreParentChildCollisions: 1
