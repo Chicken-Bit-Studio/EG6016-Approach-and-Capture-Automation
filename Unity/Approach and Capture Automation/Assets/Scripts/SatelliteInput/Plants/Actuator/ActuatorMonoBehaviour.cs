@@ -18,9 +18,9 @@ public class ActuatorMonoBehaviour : MonoBehaviour
     [Header("Actuator Properties")]
     [Tooltip("The maximum torque the actuator can produce in newton-meters.")]
     [Range(1f, 20)]
-    public float actuatorTorque = 10f;  // Eventually this will be dictated by the ModelElements.Actuator value
+    public float actuatorTorque = 10f;      // Eventually this will be dictated by the ModelElements.Actuator value
     [Tooltip("The maximum speed at which the actuator can mode in degrees-per-second.")]
-    public float actuatorMaxSpeed = 30f;// Eventually this will be dictated by the ModelElements.Actuator value
+    public float actuatorMaxSpeed = 30f;    // Eventually this will be dictated by the ModelElements.Actuator value
     public float angleMin = 0f;
     public float angleMax = 90f;
 

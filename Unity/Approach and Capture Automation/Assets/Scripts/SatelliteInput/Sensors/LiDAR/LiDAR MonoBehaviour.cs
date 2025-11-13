@@ -21,8 +21,11 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public quaternion inverseRotation = new();
         [Tooltip("Should the LiDAR raycasts ignore colliders on parent objects of the emitter?")]
         public bool ignoreParentColliders = true;
+        [HideInInspector] public QueryParameters queryParameters;
 
         [Header("Scanning Settings")]
+        [TextArea]
+        public readonly string note = "The ML-friendly settings are 30deg at 1ray-per-deg due to observations feed limits.";
         [Tooltip("The sensor's field of view in degrees.")]
         public LiDARParameters.FOV fieldOfView = LiDARParameters.FOV._60deg;
         [Tooltip("The number of rays to cast per degree in the sensor's field of view.")]
@@ -106,9 +109,9 @@ public class LiDARMonoBehaviour : MonoBehaviour
     [System.Serializable]
     public class DebuggingSettings
     {
-        [Header ("Debugging Tools")]
+        [Header("Debugging Tools")]
         [Tooltip("Draw every 283rd ray for debugging purposes.")]
-        public bool drawRays = false; 
+        public bool drawRays = false;
     }
 
     public class NativeArrays
@@ -120,7 +123,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public NativeArray<RaycastCommand> raycastCommands;
         public NativeArray<RaycastHit> raycastHits;
         public NativeArray<float> hitDistances;
-        public NativeArray<float3> hitPointsInLocalSpace;
+        public NativeArray<float> hitDistances_forML;
+        //public NativeArray<float3> hitPointsInLocalSpace;
         public JobHandle lastJobHandle;
 
         public void DisposeAll()
@@ -134,7 +138,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
             if (raycastCommands.IsCreated) raycastCommands.Dispose();
             if (raycastHits.IsCreated) raycastHits.Dispose();
             if (hitDistances.IsCreated) hitDistances.Dispose();
-            if (hitPointsInLocalSpace.IsCreated) hitPointsInLocalSpace.Dispose();
+            if (hitDistances_forML.IsCreated) hitDistances_forML.Dispose();
+            //if (hitPointsInLocalSpace.IsCreated) hitPointsInLocalSpace.Dispose();
         }
         public NativeArrays()
         {
@@ -163,6 +168,12 @@ public class LiDARMonoBehaviour : MonoBehaviour
     {
         // Catch undeclared variables
         if (sensorParameters.emitter == null) Debug.LogError($"{this.name}: Emitter transform not assigned.");
+        // Instigate the correct raycast QueryParameters for the given SensorParameters initialisation settings
+        sensorParameters.queryParameters = new QueryParameters
+        {
+            layerMask = ~((1 << LayerMask.NameToLayer("Ignore Raycast")) | (1 << LayerMask.NameToLayer("Gripper Arm Elements"))),
+            hitBackfaces = false
+        };
         // Start LiDAR scanning coroutine
         liDARScanCoroutine = StartCoroutine(PerformLiDARScan());
     }
@@ -201,7 +212,7 @@ public class LiDARMonoBehaviour : MonoBehaviour
             // Proceed to use the raycast hit data at nativeArrays.raycastHits
             if (imageParameters.generateLiDARImage)
             {
-                if(imageParameters.lidarUIImage == null)
+                if (imageParameters.lidarUIImage == null)
                 {
                     Debug.LogWarning("LiDAR tried to generate an image, but no target texture has been set.");
                     imageParameters.generateLiDARImage = false;

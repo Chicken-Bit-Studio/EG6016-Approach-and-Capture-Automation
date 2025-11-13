@@ -185,17 +185,45 @@ public static class LiDARStatic
                 public float3 emitterPos;
                 public quaternion emitterInverseRot;
                 public NativeArray<float> hitDists;
-                public NativeArray<float3> lsHitPoints;
+                public NativeArray<float> hitDists_forML;
+                //public NativeArray<float3> lsHitPoints;
                 public void Execute(int i)
                 {
                     var hit = rayHits[i];
                     hitDists[i] = hit.distance;
-                    // Convert the worldsapce hit coordinates to emitter local space
+                    /*/ Convert the worldsapce hit coordinates to emitter local space
                     lsHitPoints[i] = math.mul(emitterInverseRot, new float3(
                         hit.point.x - emitterPos.x,
                         hit.point.y - emitterPos.y,
                         hit.point.z - emitterPos.z
-                    ));
+                    ));*/
+                }
+            }
+            public struct MapHitDistancesForMLJob : IJob
+            {
+                // Unity threw a fit when I tried to access out-of-range indexes of hitDists, so this job has been unparallelised.
+                [ReadOnly] public NativeArray<float> hitDists;
+                public NativeArray<float> hitDists_forML;
+                public int inputLength;         // mono.nativeArrays.totalRayCount
+                public int outputLength;        // RoboticsDataClasses...MAX_LIDAR_SAMPLES
+                public void Execute()
+                {
+                    for (int i = 0; i < outputLength; i++)
+                    {
+                        // Compute the start and end range of input indices that map to this output sample
+                        float startF = (float)i / outputLength * inputLength;
+                        float endF = (float)(i + 1) / outputLength * inputLength;
+                        int start = (int)math.floor(startF);
+                        int end = (int)math.min(math.ceil(endF), inputLength);
+                        float sum = 0f;
+                        int count = 0;
+                        for (int j = start; j < end; j++)
+                        {
+                            sum += hitDists[j];
+                            count++;
+                        }
+                        hitDists_forML[i] = count > 0 ? sum / count : 0f;
+                    }
                 }
             }
         }
@@ -219,7 +247,8 @@ public static class LiDARStatic
             mono.nativeArrays.raycastCommands = new NativeArray<RaycastCommand>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             mono.nativeArrays.raycastHits = new NativeArray<RaycastHit>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             mono.nativeArrays.hitDistances = new NativeArray<float>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            mono.nativeArrays.hitPointsInLocalSpace = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            mono.nativeArrays.hitDistances_forML = new NativeArray<float>(RoboticsDataClasses.ReinforcementLearning.ApproachAndCaptureProject.Observations.MAX_LIDAR_SAMPLES, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            //mono.nativeArrays.hitPointsInLocalSpace = new NativeArray<float3>(count, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
 
             // Loop through the .bin file and populate the float3 native array
             for (int i = 0; i < count; i++)
@@ -260,7 +289,7 @@ public static class LiDARStatic
                 wsDirs = mono.nativeArrays.worldspaceDirs,
                 raycastCommands = mono.nativeArrays.raycastCommands,
                 raysOrigin = (float3)mono.sensorParameters.emitter.position,
-                qp = QueryParameters.Default,   // TODO: Install potential ignore/backface/other raycast logic here if necessary, or pass it as a parameter.
+                qp = mono.sensorParameters.queryParameters,
                 maxDistance = mono.sensorParameters.maxDistance
             };
             JobHandle buildRaycastCommandsJob_jobHandle = buildRaycastCommandsJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, rotateRayDirectionsJob_jobHandle);
@@ -280,9 +309,20 @@ public static class LiDARStatic
                 emitterPos = (float3)mono.sensorParameters.emitter.position,
                 emitterInverseRot = emitterInverseRotation,
                 hitDists = mono.nativeArrays.hitDistances,
-                lsHitPoints = mono.nativeArrays.hitPointsInLocalSpace
+                hitDists_forML = mono.nativeArrays.hitDistances_forML,
+                //lsHitPoints = mono.nativeArrays.hitPointsInLocalSpace
             };
-            mono.nativeArrays.lastJobHandle = updateOutputArraysJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, performRaycastingJob_jobHandle);
+            JobHandle updateOutputArraysJob_jobHandle = updateOutputArraysJob.Schedule(mono.nativeArrays.totalRayCount, mono.nativeArrays.idealBatchSize, performRaycastingJob_jobHandle);
+
+            // Schedule the mapping job over the smaller array length ready for ML
+            var mapHitDistancesForMLJob = new JobStructures.MapHitDistancesForMLJob
+            {
+                hitDists = mono.nativeArrays.hitDistances,
+                hitDists_forML = mono.nativeArrays.hitDistances_forML,
+                inputLength = mono.nativeArrays.totalRayCount,
+                outputLength = RoboticsDataClasses.ReinforcementLearning.ApproachAndCaptureProject.Observations.MAX_LIDAR_SAMPLES,
+            };
+            mono.nativeArrays.lastJobHandle = mapHitDistancesForMLJob.Schedule(updateOutputArraysJob_jobHandle);
 
             // Allow for ray drawing as a debugging tool. Slow.
             if (mono.debuggingSettings.drawRays)
@@ -344,7 +384,7 @@ public static class LiDARStatic
         //Note: Image generation is currently bare-bones and not parametised.
 
         public enum ImageResolution { Size512x512, Size1024x1024 };
-        public enum MappingCurve { Linear, Exponential, Reciprocal, Logarithmic, GammaCorrection};
+        public enum MappingCurve { Linear, Exponential, Reciprocal, Logarithmic, GammaCorrection };
         public static int DecodeImageResolution(ImageResolution enumImgRes)
         {
             switch (enumImgRes)
@@ -376,7 +416,7 @@ public static class LiDARStatic
                 default:
                     Debug.LogError("Unrecognized MappingCurve enum value: " + Enum.GetName(typeof(ImageResolution), enumMappingCurve));
                     return (v, a) => 0f;
-            }   
+            }
         }
         public static void UpdateLiDARImage(LiDARMonoBehaviour monoBehaviourInstance)
         {
@@ -394,7 +434,7 @@ public static class LiDARStatic
                 // Note: No hit corresponds to a distance value of zero for some reason. Surely it should be float.PositiveInfinity, but what do I know.
                 // Calculate the 16-bit colour of the resulting pixel. Make non-hits black and others fade in from gloom ooo spooky
                 ushort value16 = 0;
-                if(hit.collider != null)
+                if (hit.collider != null)
                 {
                     float pseudoValue = 1 - hit.distance / mono.sensorParameters.maxDistance; // 0.0 to 1.0
                     value16 = (ushort)(DecodeMappingCurve(mono.imageParameters.mappingCurve)(pseudoValue, mono.imageParameters.a) * 65535f);

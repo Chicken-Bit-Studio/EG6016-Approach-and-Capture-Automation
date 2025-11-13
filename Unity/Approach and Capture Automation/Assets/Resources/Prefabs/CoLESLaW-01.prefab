@@ -953,6 +953,10 @@ PrefabInstance:
       value: AttachmentNode
       objectReference: {fileID: 0}
     - target: {fileID: 4509534203261125672, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
+      propertyPath: angleMax
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 4509534203261125672, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
       propertyPath: parent.rigidbodyOverride
       value: 
       objectReference: {fileID: 4644353065356157219}
@@ -965,13 +969,25 @@ PrefabInstance:
       value: AttachmentNode
       objectReference: {fileID: 0}
     - target: {fileID: 6627908338886723373, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
+      propertyPath: angleMax
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 6627908338886723373, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
       propertyPath: parent.rigidbodyOverride
       value: 
       objectReference: {fileID: 4644353065356157219}
     - target: {fileID: 6909024961569385067, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
+      propertyPath: angleMax
+      value: 60
+      objectReference: {fileID: 0}
+    - target: {fileID: 6909024961569385067, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
       propertyPath: parent.rigidbodyOverride
       value: 
       objectReference: {fileID: 4644353065356157219}
+    - target: {fileID: 7437907400805653813, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
+      propertyPath: angleMax
+      value: 60
+      objectReference: {fileID: 0}
     - target: {fileID: 7437907400805653813, guid: 858b8f0de0775274fbdd97999267cc43, type: 3}
       propertyPath: parent.rigidbodyOverride
       value: 
@@ -2138,6 +2154,14 @@ PrefabInstance:
     - target: {fileID: 5102131600225054929, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
       propertyPath: thingTypeString
       value: ModelProfile
+      objectReference: {fileID: 0}
+    - target: {fileID: 8852607708198932526, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
+      propertyPath: sensorParameters.fieldOfView
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8852607708198932526, guid: dc082e9b62e5b5947b9cccd50a3b8af7, type: 3}
+      propertyPath: sensorParameters.raysPerDegree
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

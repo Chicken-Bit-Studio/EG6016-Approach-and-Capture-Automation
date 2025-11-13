@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Linq;
 using System.Reflection;
+using Unity.Mathematics;
 using UnityEngine;
 
 public static class RoboticsDataClasses
@@ -333,6 +335,44 @@ public static class RoboticsDataClasses
                     modelProfileObject = thrusterModelProfileObject;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Machines that learn?! Who would've thought it?
+    /// </summary>
+    public static class ReinforcementLearning
+    {
+        public class ApproachAndCaptureProject
+        {
+            [Serializable]
+            public struct Observations
+            {
+                public float3 relativePosition;             // The relative vector from the satellite's center of mass to that of the target (satellite CoM -> target CoM)
+                public float3 relativeVelocity;             // The relative velocity of the satellite's center of mass to that of the target (satellite CoM -> target CoM)
+                public float3 targetDirection;              // A unit vector (in the satellite's local reference frame) pointing from the satellite's center of mass toward the target's center of mass (satellite CoM -> target CoM)
+                public float3 angularVelocity_satellite;    // The current angular velocity of the satellite in its own local space (satellite only)
+                public float3 angularVelocity_target;       // The current angular velocity of the target in its own local space (target only)
+                public float[] lidarHitDistances;           // An array holding the APPROPRIATELY-SIZED LiDAR ray hit distances (satellite only after data collection)
+
+                public const int MAX_LIDAR_SAMPLES = 256;
+
+                public Observations(IModel.ModelSensors modelSensors, Transform satellite, Transform target)
+                {
+                    // Generic scene data
+                    relativePosition = target.InverseTransformPoint(satellite.position);
+                    relativeVelocity = (float3)(satellite.GetComponent<Rigidbody>().velocity - target.GetComponent<Rigidbody>().velocity);
+                    targetDirection = satellite.InverseTransformDirection((target.position - satellite.position).normalized);
+                    angularVelocity_satellite = (float3)satellite.GetComponent<Rigidbody>().angularVelocity;
+                    angularVelocity_target = (float3)target.GetComponent<Rigidbody>().angularVelocity;
+                    // Dynamic satellite data
+                    lidarHitDistances = modelSensors.lidars.array[0].monoBehaviour.nativeArrays.hitDistances_forML.ToArray();
+                    if (lidarHitDistances.Length != MAX_LIDAR_SAMPLES) { throw new Exception($"ML-friendly LiDAR array size mismatch. Expected: {MAX_LIDAR_SAMPLES} Received: {lidarHitDistances.Length}"); }
+                }
+            }
+
+            // Leaving off: GPT has ran out of prompts. Resubmit this struct for approval. Proceed to Actions struct.
+
         }
     }
 }

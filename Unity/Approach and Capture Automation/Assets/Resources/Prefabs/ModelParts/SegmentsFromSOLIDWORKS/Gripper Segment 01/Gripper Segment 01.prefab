@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4335453770737178012}
   - component: {fileID: 6892478657890566269}
   - component: {fileID: 4791850481403732567}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Gripper Segment 01
   m_TagString: ModelSegment
   m_Icon: {fileID: 0}

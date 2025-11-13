@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5846449911011925532}
   - component: {fileID: 5856633701632263304}
   - component: {fileID: 8656590188217899231}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: Node
   m_TagString: AttachmentNode
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 23
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -123,13 +123,23 @@ MonoBehaviour:
     rangeMax: 0
     torque: 0
     power: 0
+  actuatorTorque: 10
+  actuatorMaxSpeed: 30
+  angleMin: 0
+  angleMax: 90
+  input: 0
+  input_manual: 0
+  input_manual_isUpdated: 0
+  output: 0
   parent:
     transform: {fileID: 0}
     collider: {fileID: 0}
     rigidbody: {fileID: 0}
+    rigidbodyOverride: {fileID: 0}
   child:
     transform: {fileID: 0}
     collider: {fileID: 0}
     rigidbody: {fileID: 0}
     hingeJoint: {fileID: 0}
   ignoreParentChildCollisions: 1
+  debuggingMode: 0
