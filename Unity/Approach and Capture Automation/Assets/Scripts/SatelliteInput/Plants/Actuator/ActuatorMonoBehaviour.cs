@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -121,5 +122,76 @@ public class ActuatorMonoBehaviour : MonoBehaviour
         if (debuggingMode) { Debug.Log($"input: {input}, output: {output}, angle: {child.hingeJoint.angle}deg"); }
         // Reset the manual control order for the next physics frame
         input_manual_isUpdated = false;
+    }
+
+    public (bool, float[]) GetMLObservation()
+    {
+        // Return structure:
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Index:   Quantity:               Range:                  Note:
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // [0]      Sin(angle)              0.0  <= x <  360.0      Prevents issues at ±180° wrap points and gives the NN a continuous encoding.
+        // [1]      Cos(angle)              0.0  <= x <  360.0      ^
+        // [2]      Normalised angle        -1.0 <= x <= 1.0        Normalised angle based on configured limits gives a compact single-number position indicator useful for linear terms
+        // [3]      Abs(normalised angle)   0.0  <= x <= 1.0        "How close to an angle limit am I"? Useful for safety-reward shaping and preventing overshoot
+        // [4]      Command input           0.0  <= x <= 1.0        Input vs motor output comparison lets the network observe actuator lag and compensate explicitly rather than having to infer hidden relationship
+        // [5]      Motor output            0.0  <= x <= 1.0        ^
+        // [6]      Hingle angle velocity   -inf <  x <  inf        Shows the rate the joint is currently moving (also helpful for damping and anticipation)
+        // [7]      Motor is saturated      x = 0.0 | x = 1.0       A binary indicator telling the agent that applying more command won't help
+        //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // If the joint was not set up, return a small zero-vector
+        if (child.hingeJoint == null || child.rigidbody == null || parent.rigidbody == null)
+        {
+            Debug.LogWarning("GetMLObservation was called on a ActuatorMonoBehaviour, but it wasn't set up and returned (false, null).");
+            return (false, null);
+        }
+
+        // [0][1] Sin/Cos of the current hinge angle
+        float angleDeg = child.hingeJoint.angle;    // degrees
+        float angleRad = angleDeg * Mathf.Deg2Rad;
+        float angleSin = Mathf.Sin(angleRad);
+        float angleCos = Mathf.Cos(angleRad);
+
+        // [2] Normalized angle in [-1,1] based on configured limits
+        float mid = (angleMin + angleMax) * 0.5f;
+        float range = Mathf.Max(1e-6f, (angleMax - angleMin));  // prevent div by zero
+        float normAngle = (angleDeg - mid) / (range * 0.5f);
+        normAngle = Mathf.Clamp(normAngle, -1f, 1f);
+
+        // [3] Proximity to joint limits: absolute normalized angle (0 = center, 1 = at limit)
+        float absNormAngle = Mathf.Abs(normAngle);  // 0..1
+        
+        // [4][5] Last commanded input and smoothed output
+        // 'input' is the (possibly manual) input value; 'output' is the actuator's smoothed output
+        // Both are already -1..1 by design
+        float commandedInput = input;  // what the controller commanded (may be 0 if none)
+        float motorOutput = output;    // smoothed actuator output -1..1
+
+        // [6] Hinge angular velocity (project relative angular velocity onto hinge axis)
+        // Hinge axis is stored in local space of the child; convert to world-space.
+        Vector3 hingeAxisWorld = child.transform.TransformDirection(child.hingeJoint.axis.normalized);
+        Vector3 relAngVel = child.rigidbody.angularVelocity - parent.rigidbody.angularVelocity; // rad/s
+        float hingeAngVel = Vector3.Dot(relAngVel, hingeAxisWorld); // scalar rad/s
+        float maxSpeedRad = Mathf.Max(1e-6f, actuatorMaxSpeed * Mathf.Deg2Rad);
+        float normHingeAngVel = hingeAngVel / maxSpeedRad;
+        normHingeAngVel = Mathf.Clamp(normHingeAngVel, -1f, 1f);
+
+        // [7] Motor saturated flag: 1 if output is at (near) +/-1, else 0.
+        float motorSaturated = (Mathf.Abs(motorOutput) >= 0.995f) ? 1f : 0f;
+
+        // Pack into a fixed-order array as dictated above
+        float[] arr = new float[8];
+        arr[0] = angleSin;
+        arr[1] = angleCos;
+        arr[2] = normAngle;
+        arr[3] = absNormAngle;
+        arr[4] = commandedInput;
+        arr[5] = motorOutput;
+        arr[6] = normHingeAngVel;
+        arr[7] = motorSaturated;
+
+        return (true, arr);
     }
 }

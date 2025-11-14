@@ -208,7 +208,7 @@ public class LiDARMonoBehaviour : MonoBehaviour
             JobHandle jh = LiDARRuntimeJobs.ScheduleAndRunLiDARRaycasts(monoBehaviourInstance: this);
             while (!jh.IsCompleted) { yield return null; }
             jh.Complete();
-            
+
             // Proceed to use the raycast hit data at nativeArrays.raycastHits
             if (imageParameters.generateLiDARImage)
             {
@@ -226,5 +226,11 @@ public class LiDARMonoBehaviour : MonoBehaviour
                 }
             }
         }
+    }
+
+    public (bool, float[]) GetMLObservation()
+    {   
+        nativeArrays.lastJobHandle.Complete();
+        return (true, nativeArrays.hitDistances_forML.ToArray());
     }
 }

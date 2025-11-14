@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Unity.Mathematics;
 using UnityEngine;
+using Unity.Collections;
 
 public static class RoboticsDataClasses
 {
@@ -84,6 +85,12 @@ public static class RoboticsDataClasses
         {
 
         }
+
+        [System.Serializable]
+        public class GripperPad
+        {
+            
+        }
     }
 
     /// <summary>
@@ -115,12 +122,18 @@ public static class RoboticsDataClasses
             [Header("Model Input Device Resister")]
             [ReadOnly] public int sensorCount = 0;
             public LiDARs lidars = new();
+            public GripperPads gripperPads = new();
             [System.Serializable]
             public class LiDARs
             {
                 [ReadOnly] public int lidarCount = 0;
                 [HideInInspector] public Interfaces.ISensors.ILiDAR[] array;
-
+            }
+            [System.Serializable]
+            public class GripperPads
+            {
+                [ReadOnly] public int gripperPadCount = 0;
+                [HideInInspector] public Interfaces.ISensors.IGripperPad[] array;
             }
         }
         [System.Serializable]
@@ -301,10 +314,21 @@ public static class RoboticsDataClasses
                 public LiDARMonoBehaviour monoBehaviour;
                 public ModelElements.LiDAR modelProfileObject;
 
-                public ILiDAR(LiDARMonoBehaviour lidarMonoBehaviour, ModelElements.LiDAR lidarModelProfileObject = null)
+                public ILiDAR(LiDARMonoBehaviour monoBehaviour, ModelElements.LiDAR modelProfileObject = null)
                 {
-                    monoBehaviour = lidarMonoBehaviour;
-                    modelProfileObject = lidarModelProfileObject;
+                    this.monoBehaviour = monoBehaviour;
+                    this.modelProfileObject = modelProfileObject;
+                }
+            }
+            public class IGripperPad
+            {
+                public GripperPadMonoBehaviour monoBehaviour;
+                public ModelElements.GripperPad modelProfileObject;
+
+                public IGripperPad(GripperPadMonoBehaviour monoBehaviour, ModelElements.GripperPad modelProfileObject = null)
+                {
+                    this.monoBehaviour = monoBehaviour;
+                    this.modelProfileObject = modelProfileObject;
                 }
             }
         }
@@ -343,36 +367,91 @@ public static class RoboticsDataClasses
     /// </summary>
     public static class ReinforcementLearning
     {
+        // With no two applications of reinforcement learning being the same, each deployment must have its own tailored Observations and Actions struct to suit the model being trained.
         public class ApproachAndCaptureProject
         {
-            [Serializable]
+            // Observations and Actions are short-lived structs and should only be used in the same instance they are created in, for sake of the lidatHitDistances reference.
             public struct Observations
             {
-                public float3 relativePosition;             // The relative vector from the satellite's center of mass to that of the target (satellite CoM -> target CoM)
-                public float3 relativeVelocity;             // The relative velocity of the satellite's center of mass to that of the target (satellite CoM -> target CoM)
-                public float3 targetDirection;              // A unit vector (in the satellite's local reference frame) pointing from the satellite's center of mass toward the target's center of mass (satellite CoM -> target CoM)
+                public float3 relativePosition;             // The relative vector from the satellite's origin to that of the target (satellite -> target)
+                public float3 relativeVelocity;             // The relative velocity of the satellite's origin to that of the target (satellite -> target)
+                public float3 targetDirection;              // A unit vector (in the satellite's local reference frame) pointing from the satellite's origin toward the target's origin (satellite -> target)
                 public float3 angularVelocity_satellite;    // The current angular velocity of the satellite in its own local space (satellite only)
                 public float3 angularVelocity_target;       // The current angular velocity of the target in its own local space (target only)
-                public float[] lidarHitDistances;           // An array holding the APPROPRIATELY-SIZED LiDAR ray hit distances (satellite only after data collection)
+                public float[] actuatorData;                // A compiled array of returns the .GetMLObservation() method from each instance of ActuatorMonoBehavior in the model.
+                public float[] gripperPadData;              // A compiled array of returns the .GetMLObservation() method from each instance of GripperPadMonoBehavior in the model.
+                public float[] lidarData;                   // An array holding the APPROPRIATELY-SIZED LiDAR ray hit distances (satellite only after data collection)
 
-                public const int MAX_LIDAR_SAMPLES = 256;
+                public const int MAX_LIDAR_SAMPLES = 256;   // Edit this to dynamically change the size of generated and fed LiDAR sample arrays
+                public const int FEED_SIZE = MAX_LIDAR_SAMPLES + 15;
 
-                public Observations(IModel.ModelSensors modelSensors, Transform satellite, Transform target)
+                public Observations(IModel modelInterface, Transform satellite, Rigidbody satelliteRb, Transform target, Rigidbody targetRb)
                 {
+                    // TODO: Rework to reference NativeArray in LiDARMonoBehaviour - not call .ToArray().
                     // Generic scene data
-                    relativePosition = target.InverseTransformPoint(satellite.position);
-                    relativeVelocity = (float3)(satellite.GetComponent<Rigidbody>().velocity - target.GetComponent<Rigidbody>().velocity);
+                    relativePosition = satellite.InverseTransformPoint(target.position);
+                    relativeVelocity = (float3)satellite.InverseTransformDirection(satelliteRb.velocity - targetRb.velocity);
                     targetDirection = satellite.InverseTransformDirection((target.position - satellite.position).normalized);
-                    angularVelocity_satellite = (float3)satellite.GetComponent<Rigidbody>().angularVelocity;
-                    angularVelocity_target = (float3)target.GetComponent<Rigidbody>().angularVelocity;
-                    // Dynamic satellite data
-                    lidarHitDistances = modelSensors.lidars.array[0].monoBehaviour.nativeArrays.hitDistances_forML.ToArray();
-                    if (lidarHitDistances.Length != MAX_LIDAR_SAMPLES) { throw new Exception($"ML-friendly LiDAR array size mismatch. Expected: {MAX_LIDAR_SAMPLES} Received: {lidarHitDistances.Length}"); }
+                    angularVelocity_satellite = (float3)satellite.InverseTransformDirection(satelliteRb.angularVelocity);
+                    angularVelocity_target = (float3)target.InverseTransformDirection(targetRb.angularVelocity);
+                    // TODO: Note: This next part demonstrates the current need to shake up how ModelElements, arrays in IModel instances Interfaces need to be automatised. Adding GripperPads was confusing,
+                    //             and I expect there is a way to do this dynamically with either file seaching + naming conventions or a single loopup dictionary-like object.
+                    // Dynamic satellite Actuator data
+                    List<float> tActuatorData = new();
+                    foreach(Interfaces.IPlants.IActuator iface in modelInterface.plants.actuators.array)
+                    {
+                        // (bool isValidData, float[] values)
+                        (bool, float[]) output = iface.monoBehaviour.GetMLObservation();
+                        if (!output.Item1) { tActuatorData.AddRange(output.Item2); }
+                    }
+                    actuatorData = tActuatorData.ToArray();
+                    // Dynamic satellite Gripper Pad data
+                    List<float> tGripperPadData = new();
+                    foreach(Interfaces.ISensors.IGripperPad iface in modelInterface.sensors.gripperPads.array)
+                    {
+                        // (bool isValidData, float[] values)
+                        (bool, float[]) output = iface.monoBehaviour.GetMLObservation();
+                        if (!output.Item1) { tGripperPadData.AddRange(output.Item2); } 
+                    }
+                    gripperPadData = tGripperPadData.ToArray();
+                    // Dynamic satellite LiDAR data
+                    lidarData = modelInterface.sensors.lidars.array[0].monoBehaviour.GetMLObservation().Item2;
+                }
+                public readonly float[] SendToFloatArray()
+                {
+                    // Create a new empty holder list
+                    List<float> list = new();
+                    // Generic scene data
+                    AddFloat3ValuesToList(relativePosition);
+                    AddFloat3ValuesToList(relativeVelocity);
+                    AddFloat3ValuesToList(targetDirection);
+                    AddFloat3ValuesToList(angularVelocity_satellite);
+                    AddFloat3ValuesToList(angularVelocity_target);
+                    // Dynamic data
+                    AddArrayValuesToList(actuatorData);
+                    AddArrayValuesToList(gripperPadData);
+                    AddArrayValuesToList(lidarData);
+
+                    return list.ToArray();
+
+                    void AddFloat3ValuesToList(float3 f3)
+                    {
+                        list.Add(f3[0]);
+                        list.Add(f3[1]);
+                        list.Add(f3[2]);
+                    }
+                    void AddArrayValuesToList(float[] subArr)
+                    {
+                        foreach (float f in subArr) list.Add(f);
+                    }
                 }
             }
-
-            // Leaving off: GPT has ran out of prompts. Resubmit this struct for approval. Proceed to Actions struct.
-
+            [Serializable]
+            public struct Actions
+            {
+                public const int FEED_SIZE = 0;
+                // To be implemented...
+            }
         }
     }
 }

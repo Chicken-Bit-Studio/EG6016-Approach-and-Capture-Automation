@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
+using static RoboticsDataClasses;
 
 /// <summary>
 /// The EnvironmentController acts as the interface between Unity (the simulator)
 /// and Python (the learning agent). It allows physics to be stepped manually,
 /// actions to be applied, and observations/rewards to be collected.
+/// The next steps for this script would be to seperate the universal processes here from the ApproachAndCapture project. Perhaps each project culd have its own interface script, similar to the currently-depreciated CoLESLaWInterface.cs.
 /// </summary>
 public class EnvironmentController : MonoBehaviour
 {
@@ -21,11 +24,13 @@ public class EnvironmentController : MonoBehaviour
         [Tooltip("The CoLESLaW-01 prefab in the scene.")]
         public GameObject satelliteGameObject;
         [ReadOnly] public Rigidbody satelliteRigidbody;
+        [ReadOnly] public IModel satelliteModelInterface;
 
         [Header("Target Object")]
         [Tooltip("The object being captured.")]
         public GameObject targetGameObject;
         [ReadOnly] public Rigidbody targetRigidbody;
+        [ReadOnly] public Collider targetCollider;
 
         // Cached initial transform data
         [HideInInspector] public Vector3 satelliteStartingPosition;
@@ -38,6 +43,25 @@ public class EnvironmentController : MonoBehaviour
             satelliteStartingRotation = satelliteGameObject.transform.rotation;
             targetStartingPosition = targetGameObject.transform.position;
             targetStartingRotation = targetGameObject.transform.rotation;
+        }
+
+        // Flat persistent native arrays for model observations and actions
+        [HideInInspector] public NativeArrays nativeArrays = new();
+        public class NativeArrays
+        {
+            public NativeArray<float> observations_feed;
+            public NativeArray<float> actions_feed;
+            public NativeArrays()
+            {
+                //observations_feed = new NativeArray<float>(ReinforcementLearning.ApproachAndCaptureProject.Observations.FEED_SIZE, Allocator.Persistent);
+                //actions_feed = new NativeArray<float>(ReinforcementLearning.ApproachAndCaptureProject.Actions.FEED_SIZE, Allocator.Persistent);
+                Application.quitting += DisposeAll;
+            }
+            private void DisposeAll()
+            {
+                if (observations_feed.IsCreated) observations_feed.Dispose();
+                if (actions_feed.IsCreated) actions_feed.Dispose();
+            }
         }
     }
     [Serializable]
@@ -123,6 +147,8 @@ public class EnvironmentController : MonoBehaviour
     {
         // Turn off automatic physics if configured to do so on startup
         Physics.simulationMode = debugging.useFixedUpdateOnStart ? SimulationMode.FixedUpdate : SimulationMode.Script;
+        // Generate the satellite's IModel interface
+        references.satelliteModelInterface = new IModel(references.satelliteGameObject);
         // Cache the rigidbody references
         if (references.satelliteGameObject == null || references.targetGameObject == null) { throw new NullReferenceException("Assign satellite and target gameobjects first!"); }
         references.satelliteRigidbody = references.satelliteGameObject.GetComponent<Rigidbody>();
@@ -156,10 +182,16 @@ public class EnvironmentController : MonoBehaviour
     /// <returns>A tuple of (observation array, reward, done).</returns>
     public (float[], float, bool) Step(float[] action, bool isDebugStep = false)
     {
-        // TODO: Modify this method with a custom actions struct
-
         // If the episode has finished, return a shortedned package early
-        if (episodeSettings.episodeDone) { return (CollectObservations(), 0f, true); }
+        if (episodeSettings.episodeDone)
+        {
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+            var obs = CollectObservations();
+            stopwatch.Stop();
+            Debug.Log($"Manual call of CollectObservations took: {StaticUtilities.FormatStopwatchDuration(stopwatch)}");
+            return (obs, 0f, true);
+        }
         // Increment the episode clock by one unit of deltaTime
         episodeSettings.elapsedTime += episodeSettings.deltaTime;
         // Apply actions to satellite
@@ -171,10 +203,8 @@ public class EnvironmentController : MonoBehaviour
         episodeSettings.episodeReward += reward;
         // Check for episode termination criteria
         if (CheckDone()) { episodeSettings.episodeDone = true; }
-        // Gather current observations
-        float[] observations = CollectObservations();
-        // Return the full RL step package
-        return (observations, reward, episodeSettings.episodeDone);
+        // Gather current observations and return the full RL step package
+        return (CollectObservations(), reward, episodeSettings.episodeDone);
     }
 
     /// <summary>
@@ -206,33 +236,14 @@ public class EnvironmentController : MonoBehaviour
     /// </summary>
     private float[] CollectObservations()
     {
-        List<float> obs = new();
-
-        // Relative position and velocity (target to satellite)
-        Vector3 relPos = references.targetGameObject.transform.InverseTransformPoint(references.satelliteGameObject.transform.position);
-        Vector3 relVel = references.targetGameObject.transform.InverseTransformDirection(references.satelliteRigidbody.velocity);
-        obs.AddRange(new float[] { relPos.x, relPos.y, relPos.z });
-        obs.AddRange(new float[] { relVel.x, relVel.y, relVel.z });
-
-        // Orientation error (difference between satellite and target) Note: useless? Capture may need to be angle-invariant.
-        Quaternion relRot = Quaternion.Inverse(references.targetGameObject.transform.rotation) * references.satelliteGameObject.transform.rotation;
-        Vector3 eulerError = relRot.eulerAngles;
-        eulerError = new Vector3(
-            Mathf.DeltaAngle(0, eulerError.x),
-            Mathf.DeltaAngle(0, eulerError.y),
-            Mathf.DeltaAngle(0, eulerError.z));
-        obs.AddRange(new float[] { eulerError.x, eulerError.y, eulerError.z });
-
-        // Angular velocity
-        obs.AddRange(new float[] {
-            references.satelliteRigidbody.angularVelocity.x,
-            references.satelliteRigidbody.angularVelocity.y,
-            references.satelliteRigidbody.angularVelocity.z });
-
-        // TODO: Append LiDAR samples or fuel level etc. here
-        // obs.AddRange(lidarDistances);
-
-        return obs.ToArray();
+        // TODO: track this workflow back - it's not the most efficient wrt .ToArray() calls.
+        return new ReinforcementLearning.ApproachAndCaptureProject.Observations(
+            modelInterface: references.satelliteModelInterface,
+            satellite: references.satelliteGameObject.transform,
+            satelliteRb: references.satelliteRigidbody,
+            target: references.targetGameObject.transform,
+            targetRb: references.targetRigidbody
+        ).SendToFloatArray();
     }
 
     /// <summary>

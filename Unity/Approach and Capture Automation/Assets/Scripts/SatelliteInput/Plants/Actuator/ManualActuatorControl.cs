@@ -12,10 +12,9 @@ public class ManualActuatorControl : MonoBehaviour
 
     void Start()
     {
-        // Collect a reference to the IModel instance for this gameobject
-        CoLESLaWInterface coLESLaWInterface = GetComponent<CoLESLaWInterface>();
-        if (coLESLaWInterface == null) { Debug.LogWarning("CoLESLaW Interface script not found!"); this.enabled = false; return; }
-        modelInterface = coLESLaWInterface.modelInterface;
+        // TODO: this is now a flimsy reference. The modelInterface reference is easy to take. Try to ensure only one is made per scene, through.
+        // Collect a reference to the IModel instance for this gameobjec
+        modelInterface = FindAnyObjectByType<EnvironmentController>().references.satelliteModelInterface;
     }
     void Update()
     {

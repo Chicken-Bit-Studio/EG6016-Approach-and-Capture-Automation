@@ -54,12 +54,24 @@ class UnityEnvClient:
         except:
             pass
 
+#Debugging Tools
+def write_floats_to_binary(floats):
+    """Write a sequence of floats to a binary file."""
+    file_path = "C:/Users/bense/Downloads/obs.bin"
+    with open(file_path, "wb") as f:
+        for value in floats:
+            # 'f' packs each number as a 4 byte float
+            f.write(struct.pack("f", value))
+#/Debugging Tools
+             
 if __name__ == '__main__':
     client = UnityEnvClient()
     client.reset(seed=123)
     # send a zero action vector of size 6 (Fx,Fy,Fz,Tx,Ty,Tz)
     for i in range(10):
         obs, reward, done = client.step([0.0]*6)
+        #write_floats_to_binary(obs)
         print(f"step {i}: reward= {reward:.4f}, done= {done}, obs_len= {len(obs) if obs else 0}")
         if done: break
     client.close()
+
