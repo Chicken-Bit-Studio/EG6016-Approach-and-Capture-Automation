@@ -43,6 +43,7 @@ public class ManualThrusterControl : MonoBehaviour
     public void Update()
     {
         // Handle zero-fying and then non-zero signal application differently so each pass through keyMaps doesn't overwrite bits of the last
+        // TODO: These actually don't integrate FixedUpdate at this time, which is a logic error.
         foreach ((KeyCode, ThrusterMonoBehaviour[], float) bind in keyMaps)
         {
             if (Input.GetKeyUp(bind.Item1)) { FireThrusters(bind.Item2, 0); }

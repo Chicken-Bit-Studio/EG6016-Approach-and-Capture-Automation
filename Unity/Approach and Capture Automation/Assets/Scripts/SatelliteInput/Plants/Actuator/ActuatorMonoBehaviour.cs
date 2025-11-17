@@ -107,7 +107,6 @@ public class ActuatorMonoBehaviour : MonoBehaviour
     {
         // Allow for manual control to take over for this physics frame
         if (input_manual_isUpdated) { input = input_manual; }
-        else { input = 0; }
         // Compute the hinge motor's output this physics frame
         output = ClawActuator.Response(input, output, Time.fixedDeltaTime);
         // Always be updating the HingeJoint's motor instructions. TODO: Can be checked for changes if time permits.

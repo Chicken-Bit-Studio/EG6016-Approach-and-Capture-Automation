@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8951792057164328757}
   - component: {fileID: 4035324185815343394}
-  - component: {fileID: 3333146732768431352}
+  - component: {fileID: 3335243153204194322}
   m_Layer: 0
   m_Name: Machine Learning Manager
   m_TagString: Untagged
@@ -48,8 +48,23 @@ MonoBehaviour:
   references:
     satelliteGameObject: {fileID: 0}
     satelliteRigidbody: {fileID: 0}
+    satelliteModelInterface:
+      modelRoot: {fileID: 0}
+      sensors:
+        sensorCount: 0
+        lidars:
+          lidarCount: 0
+        gripperPads:
+          gripperPadCount: 0
+      plants:
+        plantCount: 0
+        actuators:
+          actuatorCount: 0
+        thrusters:
+          thrusterCount: 0
     targetGameObject: {fileID: 0}
     targetRigidbody: {fileID: 0}
+    targetCollider: {fileID: 0}
     satelliteStartingPosition: {x: -0.86443335, y: -0.013460532, z: 0.5025673}
     satelliteStartingRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
     targetStartingPosition: {x: 0, y: 0, z: 6.48}
@@ -65,7 +80,7 @@ MonoBehaviour:
     maximumStartingSpeed: 0.3
     maximumAngularOffset: 20
     maximumAngularSpeed: 15
---- !u!114 &3333146732768431352
+--- !u!114 &3335243153204194322
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -74,7 +89,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4089481651138545355}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6baa8c0f69c7f714da459b012b4d536c, type: 3}
+  m_Script: {fileID: 11500000, guid: 90f68596c088369498d740c61842eddd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   envController: {fileID: 4035324185815343394}

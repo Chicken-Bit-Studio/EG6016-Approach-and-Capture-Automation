@@ -5,7 +5,7 @@ using System.Threading;
 using System.IO;
 using UnityEngine;
 
-public class EnvironmentSocketServer : MonoBehaviour
+public class EnvironmentSocketServer_Old : MonoBehaviour
 {
     // This script was generated with assistance from OpenAI's GPT-5 model.
     // For details on the classes here that were new to me at the time of writing, see:
@@ -78,7 +78,7 @@ public class EnvironmentSocketServer : MonoBehaviour
                         // Read opCode (int32): 0 = step, 1 = reset
                         int op;
                         try { op = br.ReadInt32(); }
-                        catch (IOException) { break; }
+                        catch (IOException) { Debug.LogError("Couldn't read OP code."); break; }
 
                         if (op == 1)
                         {

@@ -120,18 +120,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2248c13f3e8d6c7429690dc8ea0a4689, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  modelInterface:
-    modelRoot: {fileID: 1260084871158298781}
-    sensors:
-      sensorCount: 1
-      lidars:
-        lidarCount: 1
-    plants:
-      plantCount: 24
-      actuators:
-        actuatorCount: 0
-      thrusters:
-        thrusterCount: 24
 --- !u!114 &5251465211609738666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -232,6 +220,8 @@ MonoBehaviour:
       sensorCount: 0
       lidars:
         lidarCount: 0
+      gripperPads:
+        gripperPadCount: 0
     plants:
       plantCount: 0
       actuators:

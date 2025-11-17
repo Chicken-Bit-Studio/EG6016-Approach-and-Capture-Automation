@@ -16,6 +16,7 @@ public class EnvironmentController : MonoBehaviour
     public EpisodeSettings episodeSettings = new();
     public EpisodeRandomisation episodeRandomisation = new();
     [HideInInspector] public Debugging debugging = new();
+    
 
     [Serializable]
     public class References
@@ -44,32 +45,13 @@ public class EnvironmentController : MonoBehaviour
             targetStartingPosition = targetGameObject.transform.position;
             targetStartingRotation = targetGameObject.transform.rotation;
         }
-
-        // Flat persistent native arrays for model observations and actions
-        [HideInInspector] public NativeArrays nativeArrays = new();
-        public class NativeArrays
-        {
-            public NativeArray<float> observations_feed;
-            public NativeArray<float> actions_feed;
-            public NativeArrays()
-            {
-                //observations_feed = new NativeArray<float>(ReinforcementLearning.ApproachAndCaptureProject.Observations.FEED_SIZE, Allocator.Persistent);
-                //actions_feed = new NativeArray<float>(ReinforcementLearning.ApproachAndCaptureProject.Actions.FEED_SIZE, Allocator.Persistent);
-                Application.quitting += DisposeAll;
-            }
-            private void DisposeAll()
-            {
-                if (observations_feed.IsCreated) observations_feed.Dispose();
-                if (actions_feed.IsCreated) actions_feed.Dispose();
-            }
-        }
     }
     [Serializable]
     public class EpisodeSettings
     {
         [Header("Episode Management")]
         [Tooltip("Seconds before episode timeout.")]
-        public float maxEpisodeTime = 60f;
+        public float maxEpisodeTime = 25f;
         [Tooltip("The simulated time between each step.")]
         [ReadOnly] public float deltaTime = 0.02f;
         [Tooltip("Time elapsed this episode.")]
@@ -183,19 +165,11 @@ public class EnvironmentController : MonoBehaviour
     public (float[], float, bool) Step(float[] action, bool isDebugStep = false)
     {
         // If the episode has finished, return a shortedned package early
-        if (episodeSettings.episodeDone)
-        {
-            var stopwatch = new System.Diagnostics.Stopwatch();
-            stopwatch.Start();
-            var obs = CollectObservations();
-            stopwatch.Stop();
-            Debug.Log($"Manual call of CollectObservations took: {StaticUtilities.FormatStopwatchDuration(stopwatch)}");
-            return (obs, 0f, true);
-        }
+        if (episodeSettings.episodeDone) { return (new float[1], 0f, true); }   // TODO: use calculated length
         // Increment the episode clock by one unit of deltaTime
         episodeSettings.elapsedTime += episodeSettings.deltaTime;
         // Apply actions to satellite
-        if (!isDebugStep) { ApplyAction(action); }
+        ApplyAction(action, isDebugStep);
         // Advance physics by one 'step' (time-domain)
         Physics.Simulate(episodeSettings.deltaTime);
         // Compute and increment reward
@@ -203,38 +177,39 @@ public class EnvironmentController : MonoBehaviour
         episodeSettings.episodeReward += reward;
         // Check for episode termination criteria
         if (CheckDone()) { episodeSettings.episodeDone = true; }
+        // Collect observations (time and report if debugging)
+        float[] obs;
+        if (isDebugStep)
+        {
+            var stopwatch = new System.Diagnostics.Stopwatch();
+            stopwatch.Start();
+            obs = CollectObservations();
+            stopwatch.Stop();
+            Debug.Log($"Manual call of CollectObservations took: {StaticUtilities.FormatStopwatchDuration(stopwatch)}");
+        }
+        else { obs = CollectObservations(); }
         // Gather current observations and return the full RL step package
-        return (CollectObservations(), reward, episodeSettings.episodeDone);
+        return (obs, reward, episodeSettings.episodeDone);
     }
 
     /// <summary>
     /// Simple action mapping: expects 6 floats [Fx, Fy, Fz, Tx, Ty, Tz]
     /// representing forces and torques in local body coordinates.
     /// </summary>
-    private void ApplyAction(float[] action)
+    private void ApplyAction(float[] action, bool debuggingMode = false)
     {
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        // TODO: Modify this method with a custom actions struct !!
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        if (action.Length < 6)
-        {
-            Debug.LogError("Action array too short! Expected 6 floats.");
-            return;
-        }
-
-        // Scale actions to realistic forces/torques
-        Vector3 force = new Vector3(action[0], action[1], action[2]) * 10f; // N
-        Vector3 torque = new Vector3(action[3], action[4], action[5]) * 1f; // Nm
-
-        references.satelliteRigidbody.AddRelativeForce(force, ForceMode.Force);
-        references.satelliteRigidbody.AddRelativeTorque(torque, ForceMode.Force);
+        // Create and apply the provided actions array with the struct found in RoboticsDataClasses.ReinforcementLearning.ApproachAndCaptureProject.Actions
+        new ReinforcementLearning.ApproachAndCaptureProject.Actions(
+            modelInterface: references.satelliteModelInterface,
+            receivedFloats: action
+        ).AffectModel(debuggingMode: debuggingMode);
     }
 
     /// <summary>
     /// Collects the current observation vector for the agent.
     /// </summary>
-    private float[] CollectObservations()
+    //private float[] CollectObservations() - made public for EnvironmentSocketServer :(
+    public float[] CollectObservations()
     {
         // TODO: track this workflow back - it's not the most efficient wrt .ToArray() calls.
         return new ReinforcementLearning.ApproachAndCaptureProject.Observations(
@@ -253,21 +228,27 @@ public class EnvironmentController : MonoBehaviour
     /// </summary>
     private float ComputeReward()
     {
-        float dist = Vector3.Distance(references.satelliteGameObject.transform.position, references.targetGameObject.transform.position);
+        return new ReinforcementLearning.ApproachAndCaptureProject.Rewards(
+            satTransform: references.satelliteGameObject.transform,
+            satRigidbody: references.satelliteRigidbody,
+            tarTransform: references.targetGameObject.transform,
+            tarRigidbody: references.targetRigidbody
+        ).CalculateReward();
+        /*float dist = Vector3.Distance(references.satelliteGameObject.transform.position, references.targetGameObject.transform.position);
         float speed = references.satelliteRigidbody.velocity.magnitude;
 
         float reward = -0.1f * dist - 0.01f * speed;
 
-        /*
+        
             Reward inclusions:
             public float fuelConsumed;      // The arbitrarily-measured, cumulative combined net RCS thruster output since episode start (satellite only)
-        */
+        
 
         // Bonus if within 0.5m
         if (dist < 0.5f)
             reward += 1.0f;
 
-        return reward;
+        return reward;*/
     }
 
     /// <summary>
@@ -284,9 +265,9 @@ public class EnvironmentController : MonoBehaviour
         if (dist > 20f)
             return true;
 
-        // Success if close enough
+        /*/ Success if close enough
         if (dist < 0.1f)
-            return true;
+            return true;*/
 
         return false;
     }
@@ -294,7 +275,11 @@ public class EnvironmentController : MonoBehaviour
     // Called by a custom button in the Inspector window. See CustomInspector_EnvironmentController for more details.
     public void ManualStep()
     {
-        var result = this.Step(Array.Empty<float>(), true);
+        float actuators = 1f;
+        float thrusters = 0f;
+        float[] manualActionArr = new float[references.satelliteModelInterface.plants.plantCount];
+        for (int i = 0; i < manualActionArr.Length - 1; i++) { manualActionArr[i] = (i < references.satelliteModelInterface.plants.actuators.actuatorCount) ? actuators : thrusters; }
+        var result = this.Step(manualActionArr, true);
         Debug.Log($"Step: reward={result.Item2:F3}, done={result.Item3}");
     }
 }

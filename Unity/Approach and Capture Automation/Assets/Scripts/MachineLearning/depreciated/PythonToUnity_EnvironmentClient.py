@@ -2,6 +2,7 @@ import socket
 import struct
 
 class UnityEnvClient:
+    # I am bad at Python. On a totally unrelated note, I have decided that I do not like this language.
     # This script was generated with assistance from OpenAI's GPT-5 model.
     # For details on the classes here that were new to me at the time of writing, see:
     #  
@@ -67,9 +68,9 @@ def write_floats_to_binary(floats):
 if __name__ == '__main__':
     client = UnityEnvClient()
     client.reset(seed=123)
-    # send a zero action vector of size 6 (Fx,Fy,Fz,Tx,Ty,Tz)
-    for i in range(10):
-        obs, reward, done = client.step([0.0]*6)
+    # send a control vector activating the actuators but not the thrusters
+    for i in range(1000):
+        obs, reward, done = client.step([1.0] * 16 + [0.0] * 24)
         #write_floats_to_binary(obs)
         print(f"step {i}: reward= {reward:.4f}, done= {done}, obs_len= {len(obs) if obs else 0}")
         if done: break
