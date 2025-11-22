@@ -83,8 +83,8 @@ Each algorithm’s LogsAndVisualisations folder contains multiple runs:
            |- events.out.tfevents...   TensorBoard data files.
 
 Retention policy (see utils/config.py):
-  • The newest MAX_RUN_HISTORY runs (default = 5) are retained.
-  • Older folders are automatically deleted on startup of new sessions.
+  - The newest MAX_RUN_HISTORY runs (default = 5) are retained.
+  - Older folders are automatically deleted on startup of new sessions.
 
 -------------------------------------------------------------------------------
 5. Viewing Results with TensorBoard
@@ -142,16 +142,16 @@ Changes to these will affect **every** training algorithm.
 9. Troubleshooting
 -------------------------------------------------------------------------------
 
- • "ConnectionRefusedError":
+ - "ConnectionRefusedError":
       Ensure Unity is running with EnvironmentSocketServer active.
 
- • "Unexpected opcode" or timeouts:
+ - "Unexpected opcode" or timeouts:
       Port mismatch or environment not ready; restart Unity and re-run script.
 
- • Training extremely slow or unstable:
+ - Training extremely slow or unstable:
       Tune LEARNING_RATE or N_STEPS in utils/config.py.
 
- • TensorBoard shows older runs only:
+ - TensorBoard shows older runs only:
       Ensure you launch TensorBoard pointing at the base LogsAndVisualisations
       folder containing multiple run_YYYYMMDD_HHMMSS subfolders.
 

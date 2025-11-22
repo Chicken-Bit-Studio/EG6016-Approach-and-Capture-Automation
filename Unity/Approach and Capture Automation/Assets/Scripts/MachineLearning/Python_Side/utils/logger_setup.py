@@ -1,10 +1,10 @@
 """
 Creates and maintains structured logging directories for each training run.
 Handles:
-  • Timestamped 'run_YYYYMMDD_HHMMSS' folder creation.
-  • Enforcement of MAX_RUN_HISTORY retention policy.
-  • Construction of TensorBoard-compatible log directories.
-  • Optional CSV summary creation for quick statistics export.
+  - Timestamped 'run_YYYYMMDD_HHMMSS' folder creation.
+  - Enforcement of MAX_RUN_HISTORY retention policy.
+  - Construction of TensorBoard-compatible log directories.
+  - Optional CSV summary creation for quick statistics export.
 """
 
 import os
@@ -12,8 +12,7 @@ import time
 import shutil
 import logging
 import csv
-from .config import MAX_RUN_HISTORY
-
+from utils.config import MAX_RUN_HISTORY
 
 def initialise_logger(algorithm_name: str, base_path: str) -> tuple[str, logging.Logger]:
     """
@@ -58,15 +57,29 @@ def initialise_logger(algorithm_name: str, base_path: str) -> tuple[str, logging
 def _enforce_retention(log_root: str, max_runs: int):
     """
     Deletes oldest run directories in 'log_root' beyond the specified limit.
+    Also deletes associated Unity .meta files.
     """
-    existing = [os.path.join(log_root, d) for d in os.listdir(log_root)
-                if os.path.isdir(os.path.join(log_root, d))]
-    existing.sort(reverse=True)  # newest first
+    # Collect full paths to all directories inside log_root
+    existing = [
+        os.path.join(log_root, d)
+        for d in os.listdir(log_root)
+        if os.path.isdir(os.path.join(log_root, d))
+    ]
 
+    # Sort newest first (relies on timestamped or sortable directory names)
+    existing.sort(reverse=True)
+
+    # Delete everything older than max_runs
     for old_dir in existing[max_runs:]:
         try:
+            # Delete the directory itself
             shutil.rmtree(old_dir)
-            print(f"[logger_setup] Removed old run directory: {old_dir}")
+
+            # Try deleting the Unity .meta file
+            meta_path = old_dir + ".meta"
+            if os.path.exists(meta_path):
+                os.remove(meta_path)
+
         except Exception as e:
             print(f"[logger_setup] Warning: Could not remove {old_dir}: {e}")
 

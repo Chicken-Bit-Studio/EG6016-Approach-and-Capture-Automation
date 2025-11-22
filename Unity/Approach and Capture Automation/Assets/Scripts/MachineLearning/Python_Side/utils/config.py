@@ -2,10 +2,10 @@
 Central configuration file for Unity ↔ Python reinforcement-learning pipeline.
 
 Holds:
-  • Environment connection parameters.
-  • Global logging and retention settings.
-  • Universal hyperparameters used across all training algorithms.
-  • Baseline training-cycle controls such as total timesteps and
+  - Environment connection parameters.
+  - Global logging and retention settings.
+  - Universal hyperparameters used across all training algorithms.
+  - Baseline training-cycle controls such as total timesteps and
     evaluation frequency.
 
 Any algorithm-specific constants should be defined in their respective

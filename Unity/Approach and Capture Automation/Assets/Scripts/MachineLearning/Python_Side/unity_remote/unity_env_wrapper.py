@@ -4,11 +4,11 @@ Unity simulations to act as reinforcement-learning environments directly
 usable within Stable Baselines3.
 
 Responsibilities:
-  • Manage UnitySocketClient lifecycle (connect, reset, close).
-  • Translate Unity messages into Gymnasium's canonical step/reset interface.
-  • Provide dynamically constructed action and observation spaces from
+  - Manage UnitySocketClient lifecycle (connect, reset, close).
+  - Translate Unity messages into Gymnasium's canonical step/reset interface.
+  - Provide dynamically constructed action and observation spaces from
     handshake metadata.
-  • Handle graceful shutdowns and minor communication errors gracefully.
+  - Handle graceful shutdowns and minor communication errors gracefully.
 """
 
 import numpy as np
@@ -24,7 +24,7 @@ class UnityEnvWrapper(gym.Env):
 
     metadata = {"render.modes": []}
 
-    def __init__(self, host="127.0.0.1", port=5005, timeout=2.0):
+    def __init__(self, host="127.0.0.1", port=5005, timeout=60.0):
         """
         Parameters
         ----------

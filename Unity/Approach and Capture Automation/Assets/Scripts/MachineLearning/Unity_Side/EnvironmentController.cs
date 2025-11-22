@@ -16,7 +16,6 @@ public class EnvironmentController : MonoBehaviour
     public EpisodeSettings episodeSettings = new();
     public EpisodeRandomisation episodeRandomisation = new();
     [HideInInspector] public Debugging debugging = new();
-    
 
     [Serializable]
     public class References
@@ -164,6 +163,7 @@ public class EnvironmentController : MonoBehaviour
     /// <returns>A tuple of (observation array, reward, done).</returns>
     public (float[], float, bool) Step(float[] action, bool isDebugStep = false)
     {
+        Debug.Log("Stepped!");
         // If the episode has finished, return a shortedned package early
         if (episodeSettings.episodeDone) { return (new float[1], 0f, true); }   // TODO: use calculated length
         // Increment the episode clock by one unit of deltaTime
@@ -208,8 +208,7 @@ public class EnvironmentController : MonoBehaviour
     /// <summary>
     /// Collects the current observation vector for the agent.
     /// </summary>
-    //private float[] CollectObservations() - made public for EnvironmentSocketServer :(
-    public float[] CollectObservations()
+    private float[] CollectObservations()
     {
         // TODO: track this workflow back - it's not the most efficient wrt .ToArray() calls.
         return new ReinforcementLearning.ApproachAndCaptureProject.Observations(
