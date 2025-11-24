@@ -46,7 +46,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   references:
-    satelliteGameObject: {fileID: 0}
+    satelliteGameObjectInScene: {fileID: 0}
+    satelliteGameObjectPrefab: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
     satelliteRigidbody: {fileID: 0}
     satelliteModelInterface:
       modelRoot: {fileID: 0}

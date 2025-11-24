@@ -91,6 +91,12 @@ public static class RoboticsDataClasses
         {
 
         }
+
+        [System.Serializable]
+        public class FuelTank
+        {
+
+        }
     }
 
     /// <summary>
@@ -123,6 +129,7 @@ public static class RoboticsDataClasses
             [ReadOnly] public int sensorCount = 0;
             public LiDARs lidars = new();
             public GripperPads gripperPads = new();
+            public FuelTanks fuelTanks = new();
             [System.Serializable]
             public class LiDARs
             {
@@ -134,6 +141,12 @@ public static class RoboticsDataClasses
             {
                 [ReadOnly] public int gripperPadCount = 0;
                 [HideInInspector] public Interfaces.ISensors.IGripperPad[] array;
+            }
+            [System.Serializable]
+            public class FuelTanks
+            {
+                [ReadOnly] public int fuelTankCount = 0;
+                [HideInInspector] public Interfaces.ISensors.IFuelTank[] array;
             }
         }
         [System.Serializable]
@@ -293,9 +306,9 @@ public static class RoboticsDataClasses
                 plants.plantCount = totalPlants;
             }
             // Report results in the Unity Console
-            Debug.Log($"IO registration complete for {model.name}:\n" +
+            /*Debug.Log($"IO registration complete for {model.name}:\n" +
                       $"  Sensors detected: {totalSensors}\n" +
-                      $"  Plants detected:  {totalPlants}");
+                      $"  Plants detected:  {totalPlants}");*/
         }
     }
 
@@ -326,6 +339,17 @@ public static class RoboticsDataClasses
                 public ModelElements.GripperPad modelProfileObject;
 
                 public IGripperPad(GripperPadMonoBehaviour monoBehaviour, ModelElements.GripperPad modelProfileObject = null)
+                {
+                    this.monoBehaviour = monoBehaviour;
+                    this.modelProfileObject = modelProfileObject;
+                }
+            }
+            public class IFuelTank
+            {
+                public FuelTankMonoBehaviour monoBehaviour;
+                public ModelElements.FuelTank modelProfileObject;
+
+                public IFuelTank(FuelTankMonoBehaviour monoBehaviour, ModelElements.FuelTank modelProfileObject = null)
                 {
                     this.monoBehaviour = monoBehaviour;
                     this.modelProfileObject = modelProfileObject;
@@ -378,6 +402,7 @@ public static class RoboticsDataClasses
                 public float3 targetDirection;              // A unit vector (in the satellite's local reference frame) pointing from the satellite's origin toward the target's origin (satellite -> target)
                 public float3 angularVelocity_satellite;    // The current angular velocity of the satellite in its own local space (satellite only)
                 public float3 angularVelocity_target;       // The current angular velocity of the target in its own local space (target only)
+                public float fuelTankData;                  // The current fuel level of the satellite's fuel tank(s) in kilograms (satellite only)
                 public float[] actuatorData;                // A compiled array of returns the .GetMLObservation() method from each instance of ActuatorMonoBehavior in the model.
                 public float[] gripperPadData;              // A compiled array of returns the .GetMLObservation() method from each instance of GripperPadMonoBehavior in the model.
                 public float[] lidarData;                   // An array holding the APPROPRIATELY-SIZED LiDAR ray hit distances (satellite only after data collection)
@@ -395,26 +420,40 @@ public static class RoboticsDataClasses
                     angularVelocity_target = (float3)target.InverseTransformDirection(targetRb.angularVelocity);
                     // TODO: Note: This next part demonstrates the current need to shake up how ModelElements, arrays in IModel instances Interfaces need to be automatised. Adding GripperPads was confusing,
                     //             and I expect there is a way to do this dynamically with either file seaching + naming conventions or a single loopup dictionary-like object.
+                    // TODO: Automate obs collection here. Repeating these lines for each new sensor/plant type is tedious and confusing.
+                    
+                    // Dynamic data initialization
+                    (bool, float[]) output;
+                    
+                    // Dynamic satellite Fuel Tank data
+                    output = modelInterface.sensors.fuelTanks.array[0].monoBehaviour.GetMLObservation();
+                    if (!output.Item1) { fuelTankData = output.Item2[0]; }
+                    else { Debug.LogError("FuelTank observation data invalid - check FuelTankMonoBehaviour.GetMLObservation()."); fuelTankData = 1f; }
+                    
                     // Dynamic satellite Actuator data
                     List<float> tActuatorData = new();
                     foreach (Interfaces.IPlants.IActuator iface in modelInterface.plants.actuators.array)
                     {
-                        // (bool isValidData, float[] values)
-                        (bool, float[]) output = iface.monoBehaviour.GetMLObservation();
+                        output = iface.monoBehaviour.GetMLObservation();
                         if (!output.Item1) { tActuatorData.AddRange(output.Item2); }
+                        else { Debug.LogError("Actuator observation data invalid - check ActuatorMonoBehaviour.GetMLObservation()."); }
                     }
                     actuatorData = tActuatorData.ToArray();
+                    
                     // Dynamic satellite Gripper Pad data
                     List<float> tGripperPadData = new();
                     foreach (Interfaces.ISensors.IGripperPad iface in modelInterface.sensors.gripperPads.array)
                     {
-                        // (bool isValidData, float[] values)
-                        (bool, float[]) output = iface.monoBehaviour.GetMLObservation();
+                        output = iface.monoBehaviour.GetMLObservation();
                         if (!output.Item1) { tGripperPadData.AddRange(output.Item2); }
+                        else { Debug.LogError("GripperPad observation data invalid - check GripperPadMonoBehaviour.GetMLObservation()."); }
                     }
                     gripperPadData = tGripperPadData.ToArray();
+                    
                     // Dynamic satellite LiDAR data
-                    lidarData = modelInterface.sensors.lidars.array[0].monoBehaviour.GetMLObservation().Item2;
+                    output = modelInterface.sensors.lidars.array[0].monoBehaviour.GetMLObservation();
+                    if (!output.Item1) { lidarData = output.Item2; }
+                    else { Debug.LogError("LiDAR observation data invalid - check LiDARMonoBehaviour.GetMLObservation()."); lidarData = new float[MAX_LIDAR_SAMPLES]; }
                 }
                 public readonly float[] SendToFloatArray()
                 {
@@ -427,6 +466,7 @@ public static class RoboticsDataClasses
                     AddFloat3ValuesToList(angularVelocity_satellite);
                     AddFloat3ValuesToList(angularVelocity_target);
                     // Dynamic data
+                    list.Add(fuelTankData);
                     AddArrayValuesToList(actuatorData);
                     AddArrayValuesToList(gripperPadData);
                     AddArrayValuesToList(lidarData);
@@ -527,7 +567,7 @@ public static class RoboticsDataClasses
                     //Actions theseActions, Actions lastActions,
                     Transform satTransform, Rigidbody satRigidbody,
                     Transform tarTransform, Rigidbody tarRigidbody)
-                    //Collider[] satNonContactColliders, Collider[] satCaptureColliders)
+                //Collider[] satNonContactColliders, Collider[] satCaptureColliders)
                 {
                     //this.theseActions = theseActions;
                     //this.lastActions = lastActions;

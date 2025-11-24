@@ -84,14 +84,16 @@ def main():
     # --- Initialise logger ---
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     run_dir, logger = initialise_logger(algo_name, base_path)
-    # create a short, dedicated TB root (short path prevents Windows MAX_PATH issues)
-    tb_root = os.path.join(run_dir, "tensorboard")
+    """tb_root = os.path.join(run_dir, "tensorboard")
+    os.makedirs(tb_root, exist_ok=True)"""
+    tb_root = os.path.join(r"C:\Users\bense\Desktop", "tensorboard")
     os.makedirs(tb_root, exist_ok=True)
-    print(f"\033[92m Initialised logging stage complete \033[0m")
     # check: ensure the tb_root is writable
     if not os.access(tb_root, os.W_OK):
         logger.error("TensorBoard log folder is not writable: %s", tb_root)
         tb_root = None  # disable if not writable
+    print(f"\033[96m TensorBoard log folder check stage complete. \n\tPath: {tb_root} \n\tPath length: {len(tb_root)} \033[0m")
+    print(f"\033[92m Initialised logging stage complete \033[0m")
 
     # --- Create Unity environment ---
     env = UnityEnvWrapper(host=config.UNITY_HOST, port=config.UNITY_PORT)
@@ -110,7 +112,7 @@ def main():
         gamma=config.GAMMA,
         gae_lambda=config.GAE_LAMBDA,
         clip_range=config.CLIP_RANGE,
-        tensorboard_log=None,#tb_root,
+        tensorboard_log=tb_root,
         verbose=1,
     )
     print(f"\033[92m Building PPO Model stage complete \033[0m")

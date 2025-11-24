@@ -50,6 +50,8 @@ MonoBehaviour:
   input_manual: 0
   input_manual_isUpdated: 0
   output: 0
+  lr: {fileID: 2222591184963751162}
+  maxPlumeLength: 0.8
   debuggingMode: 0
 --- !u!120 &2222591184963751162
 LineRenderer:

@@ -118,7 +118,7 @@ public class EnvironmentSocketServer : MonoBehaviour
                         try
                         {
                             opCode = br.ReadInt32();
-                            ns.ReadTimeout = 2000; // after first read, reduce timeout to 2s
+                            ns.ReadTimeout = 10000; // after first read, reduce timeout to 10s. The model steps quickly, but sometimes takes time while recalibrating or saving itself, among other things.
                         }
                         catch (IOException ex)
                         {
@@ -163,10 +163,7 @@ public class EnvironmentSocketServer : MonoBehaviour
                             Debug.LogWarning($"[SocketServer] Unknown opcode ({opCode}). Disconnecting.");
                             break;
                         }
-
-                        Debug.Log($"running: {running}, connected: {client.Connected}");
                     }
-
                     Debug.Log("[SocketServer] Client disconnected.");
                 }
             }
@@ -205,12 +202,10 @@ public class EnvironmentSocketServer : MonoBehaviour
             using (BinaryWriter bw = new BinaryWriter(ms))
             {
                 bw.Write(obs.Length);
-                Debug.LogWarning($"obs.Length: {obs.Length}");  // 271
                 foreach (float f in obs) { bw.Write(f); }
                 bw.Write(reward);
                 bw.Write(done ? (byte)1 : (byte)0);
                 pendingResponse = ms.ToArray(); 
-                Debug.LogWarning($"pendingResponse size: {pendingResponse.Length}");    //1093
             }
 
             responseReady.Set(); // wake network thread

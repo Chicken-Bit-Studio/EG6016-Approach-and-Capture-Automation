@@ -1,0 +1,3 @@
+05:00:29 [INFO] Logging initialised for ppo. Output -> c:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Unity\Approach and Capture Automation\Assets\Scripts\MachineLearning\Python_Side\algorithms\ppo\LogsAndVisualisations\run_20251122_050029
+05:00:29 [INFO] Building PPO model...
+05:00:35 [INFO] Starting PPO training for 32,000 timesteps

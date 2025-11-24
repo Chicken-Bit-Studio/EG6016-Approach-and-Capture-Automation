@@ -27,7 +27,7 @@ Assets/
             │   │   └── LogsAndVisualisations/
             │   └── (other algorithms may follow similar structure)
             │
-            └── README.txt  ← This file
+            └── README.txt  <- This file
 
 -------------------------------------------------------------------------------
 2. Prerequisites
@@ -161,7 +161,7 @@ Changes to these will affect **every** training algorithm.
 
 1. Launch Unity scene containing the server component.
 2. Open a terminal in:
-       Assets/Scripts/MachineLearning/Python_Side/
+       .../Assets/Scripts/MachineLearning/Python_Side/
 3. Start the desired algorithm’s training script.
 4. Monitor live output in terminal and TensorBoard.
 5. Review saved models and CSV summaries in algorithm folder.

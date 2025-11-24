@@ -127,7 +127,6 @@ class UnitySocketClient:
         obs_len = struct.unpack("<i", obs_len_data)[0]
 
         obs_bytes = self._recvall(obs_len * 4)  # float32 = 4 bytes, dont forget
-        print(f"\033[96m 5a \033[0m len(obs): {len(obs_bytes)}")
         obs = np.frombuffer(obs_bytes, dtype=np.float32, count=obs_len)
 
         reward_bytes = self._recvall(4)

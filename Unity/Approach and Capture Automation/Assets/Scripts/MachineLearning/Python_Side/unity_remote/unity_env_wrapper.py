@@ -74,7 +74,7 @@ class UnityEnvWrapper(gym.Env):
 
         # Re-update action/obs spaces if their size changed
         if (self.client.obs_len != self.observation_space.shape[0]
-                or self.client.act_len != self.action_space.shape[0]):
+            or self.client.act_len != self.action_space.shape[0]):
             self._update_spaces()
 
         # Reset counters

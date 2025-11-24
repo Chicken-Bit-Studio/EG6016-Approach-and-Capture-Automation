@@ -18,6 +18,14 @@ public class ManualActuatorControl : MonoBehaviour
     }
     void Update()
     {
+        if (Input.GetKeyUp(extend) || Input.GetKeyUp(retrat))
+        {
+            foreach (Interfaces.IPlants.IActuator ac in modelInterface.plants.actuators.array)
+            {
+                ac.monoBehaviour.input_manual = 0;
+                ac.monoBehaviour.input_manual_isUpdated = true;
+            }
+        }
         if (Input.GetKey(extend))
         {
             foreach (Interfaces.IPlants.IActuator ac in modelInterface.plants.actuators.array)

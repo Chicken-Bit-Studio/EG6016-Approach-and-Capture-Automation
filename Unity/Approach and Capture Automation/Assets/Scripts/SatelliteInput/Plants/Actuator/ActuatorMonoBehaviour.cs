@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using static SignalDynamics;
 
-public class ActuatorMonoBehaviour : MonoBehaviour
+public class ActuatorMonoBehaviour : MonoBehaviour, IPhysicsSteppable
 {
     // Description: This script controls the articulation of a given model segment at a node.
     // Use:         Place this script on the Node gameobject where articulation is wanted. A goal of this script is to be fully automatic,
@@ -103,14 +103,14 @@ public class ActuatorMonoBehaviour : MonoBehaviour
             max = angleMax
         };
     }
-    void FixedUpdate()
+    void IPhysicsSteppable.PhysicsStep(float physicsDeltaTime)
     {
         // Allow for manual control to take over for this physics frame
         if (input_manual_isUpdated) { input = input_manual; }
         // Compute the hinge motor's output this physics frame
-        output = ClawActuator.Response(input, output, Time.fixedDeltaTime);
+        output = ClawActuator.Response(input, output, physicsDeltaTime);
         // Always be updating the HingeJoint's motor instructions. TODO: Can be checked for changes if time permits.
-        // JointMotor is a little strange. It's a struct (not a component), and needs to be assigned anew after each and every edit.
+        // JointMotor is a little strange. It's a struct (not a field), and needs to be assigned anew after each and every edit.
         child.hingeJoint.motor = new()
         {
             freeSpin = false,

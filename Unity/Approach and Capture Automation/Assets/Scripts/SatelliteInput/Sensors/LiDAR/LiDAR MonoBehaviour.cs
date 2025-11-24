@@ -168,6 +168,17 @@ public class LiDARMonoBehaviour : MonoBehaviour
     {
         // Catch undeclared variables
         if (sensorParameters.emitter == null) Debug.LogError($"{this.name}: Emitter transform not assigned.");
+        if (imageParameters.generateLiDARImage & imageParameters.lidarUIImage == null)
+        {
+            // Attempt to find a RawImage called "LiDARImageDisplay_CompleteScan" in the scene
+            imageParameters.lidarUIImage = GameObject.Find("LiDARImageDisplay_CompleteScan").GetComponent<RawImage>();
+            // If still null, disable image generation and cry
+            if (imageParameters.lidarUIImage == null)
+            {
+                imageParameters.generateLiDARImage = false;
+                Debug.LogWarning($"{this.name}: LiDAR image generation enabled but no target RawImage was set or could be found. Image generation has been disabled.");
+            }
+        }
         // Instigate the correct raycast QueryParameters for the given SensorParameters initialisation settings
         sensorParameters.queryParameters = new QueryParameters
         {
@@ -212,12 +223,6 @@ public class LiDARMonoBehaviour : MonoBehaviour
             // Proceed to use the raycast hit data at nativeArrays.raycastHits
             if (imageParameters.generateLiDARImage)
             {
-                if (imageParameters.lidarUIImage == null)
-                {
-                    Debug.LogWarning("LiDAR tried to generate an image, but no target texture has been set.");
-                    imageParameters.generateLiDARImage = false;
-                    continue;
-                }
                 secondsSinceImageUpdate += Time.deltaTime;
                 if (secondsSinceImageUpdate >= imageParameters.imageRefreshPeriod)
                 {
@@ -228,8 +233,9 @@ public class LiDARMonoBehaviour : MonoBehaviour
         }
     }
 
+    // TODO: Document!
     public (bool, float[]) GetMLObservation()
-    {   
+    {
         nativeArrays.lastJobHandle.Complete();
         return (true, nativeArrays.hitDistances_forML.ToArray());
     }

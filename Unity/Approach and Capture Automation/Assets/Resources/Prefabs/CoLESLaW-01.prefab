@@ -52,9 +52,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2942524648295809199}
   - component: {fileID: 4644353065356157219}
-  - component: {fileID: 1797233298724022366}
   - component: {fileID: 5251465211609738666}
   - component: {fileID: 7222208573467468727}
+  - component: {fileID: 8935800157399668609}
   m_Layer: 0
   m_Name: CoLESLaW-01
   m_TagString: Untagged
@@ -108,18 +108,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &1797233298724022366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1260084871158298781}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2248c13f3e8d6c7429690dc8ea0a4689, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5251465211609738666
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -222,6 +210,8 @@ MonoBehaviour:
         lidarCount: 0
       gripperPads:
         gripperPadCount: 0
+      fuelTanks:
+        fuelTankCount: 0
     plants:
       plantCount: 0
       actuators:
@@ -230,6 +220,19 @@ MonoBehaviour:
         thrusterCount: 0
   extend: 112
   retrat: 111
+--- !u!114 &8935800157399668609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260084871158298781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adcb5e206364a9a4db01876354292d86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startingRigidBodyMassIncludesFuel: 1
 --- !u!1001 &900236272482886171
 PrefabInstance:
   m_ObjectHideFlags: 0

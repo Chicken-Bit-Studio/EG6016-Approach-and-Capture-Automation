@@ -22,7 +22,7 @@ public class CustomInspector_EnvironmentController : Editor
         // Sync the toggle status
         if (!initialStateRead)
         {
-            toggleState = script.debugging.useFixedUpdateOnStart;
+            toggleState = EnvironmentController.PhysicsControl.useFixedUpdateOnStart;
             initialStateRead = true;
         }
         // Create a toggle in the Inspector
@@ -30,7 +30,7 @@ public class CustomInspector_EnvironmentController : Editor
         // If the toggle changed, call the relevant method in the script and update the boolean.
         if (newToggleState != toggleState)
         {
-            script.debugging.DoPhysicsInFixedUpdate(newToggleState);
+            script.physicsControl.DoPhysicsInFixedUpdate(newToggleState);
             toggleState = newToggleState;
         }
 

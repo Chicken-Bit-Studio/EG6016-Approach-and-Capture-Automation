@@ -486,6 +486,10 @@ PrefabInstance:
       propertyPath: references.satelliteGameObject
       value: 
       objectReference: {fileID: 517608806}
+    - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
+      propertyPath: references.satelliteGameObjectInScene
+      value: 
+      objectReference: {fileID: 517608806}
     - target: {fileID: 4089481651138545355, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: m_Name
       value: Machine Learning Manager
@@ -530,7 +534,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2805320309919715869, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

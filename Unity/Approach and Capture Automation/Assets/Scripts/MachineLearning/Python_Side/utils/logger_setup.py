@@ -70,7 +70,7 @@ def _enforce_retention(log_root: str, max_runs: int):
     existing.sort(reverse=True)
 
     # Delete everything older than max_runs
-    for old_dir in existing[max_runs:]:
+    for old_dir in existing[max_runs+1:]:
         try:
             # Delete the directory itself
             shutil.rmtree(old_dir)
