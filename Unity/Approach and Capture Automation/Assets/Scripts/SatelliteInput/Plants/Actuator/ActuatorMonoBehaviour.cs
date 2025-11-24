@@ -133,8 +133,8 @@ public class ActuatorMonoBehaviour : MonoBehaviour, IPhysicsSteppable
         // [1]      Cos(angle)              0.0  <= x <  360.0      ^
         // [2]      Normalised angle        -1.0 <= x <= 1.0        Normalised angle based on configured limits gives a compact single-number position indicator useful for linear terms
         // [3]      Abs(normalised angle)   0.0  <= x <= 1.0        "How close to an angle limit am I"? Useful for safety-reward shaping and preventing overshoot
-        // [4]      Command input           0.0  <= x <= 1.0        Input vs motor output comparison lets the network observe actuator lag and compensate explicitly rather than having to infer hidden relationship
-        // [5]      Motor output            0.0  <= x <= 1.0        ^
+        // [4]      Command input           -1.0 <= x <= 1.0        Input vs motor output comparison lets the network observe actuator lag and compensate explicitly rather than having to infer hidden relationship
+        // [5]      Motor output            -1.0 <= x <= 1.0        ^
         // [6]      Hingle angle velocity   -inf <  x <  inf        Shows the rate the joint is currently moving (also helpful for damping and anticipation)
         // [7]      Motor is saturated      x = 0.0 | x = 1.0       A binary indicator telling the agent that applying more command won't help
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

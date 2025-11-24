@@ -421,38 +421,38 @@ public static class RoboticsDataClasses
                     // TODO: Note: This next part demonstrates the current need to shake up how ModelElements, arrays in IModel instances Interfaces need to be automatised. Adding GripperPads was confusing,
                     //             and I expect there is a way to do this dynamically with either file seaching + naming conventions or a single loopup dictionary-like object.
                     // TODO: Automate obs collection here. Repeating these lines for each new sensor/plant type is tedious and confusing.
-                    
+
                     // Dynamic data initialization
                     (bool, float[]) output;
-                    
+
                     // Dynamic satellite Fuel Tank data
                     output = modelInterface.sensors.fuelTanks.array[0].monoBehaviour.GetMLObservation();
-                    if (!output.Item1) { fuelTankData = output.Item2[0]; }
+                    if (output.Item1) { fuelTankData = output.Item2[0]; }
                     else { Debug.LogError("FuelTank observation data invalid - check FuelTankMonoBehaviour.GetMLObservation()."); fuelTankData = 1f; }
-                    
+
                     // Dynamic satellite Actuator data
                     List<float> tActuatorData = new();
                     foreach (Interfaces.IPlants.IActuator iface in modelInterface.plants.actuators.array)
                     {
                         output = iface.monoBehaviour.GetMLObservation();
-                        if (!output.Item1) { tActuatorData.AddRange(output.Item2); }
+                        if (output.Item1) { tActuatorData.AddRange(output.Item2); }
                         else { Debug.LogError("Actuator observation data invalid - check ActuatorMonoBehaviour.GetMLObservation()."); }
                     }
                     actuatorData = tActuatorData.ToArray();
-                    
+
                     // Dynamic satellite Gripper Pad data
                     List<float> tGripperPadData = new();
                     foreach (Interfaces.ISensors.IGripperPad iface in modelInterface.sensors.gripperPads.array)
                     {
                         output = iface.monoBehaviour.GetMLObservation();
-                        if (!output.Item1) { tGripperPadData.AddRange(output.Item2); }
+                        if (output.Item1) { tGripperPadData.AddRange(output.Item2); }
                         else { Debug.LogError("GripperPad observation data invalid - check GripperPadMonoBehaviour.GetMLObservation()."); }
                     }
                     gripperPadData = tGripperPadData.ToArray();
-                    
+
                     // Dynamic satellite LiDAR data
                     output = modelInterface.sensors.lidars.array[0].monoBehaviour.GetMLObservation();
-                    if (!output.Item1) { lidarData = output.Item2; }
+                    if (output.Item1) { lidarData = output.Item2; }
                     else { Debug.LogError("LiDAR observation data invalid - check LiDARMonoBehaviour.GetMLObservation()."); lidarData = new float[MAX_LIDAR_SAMPLES]; }
                 }
                 public readonly float[] SendToFloatArray()
@@ -580,37 +580,94 @@ public static class RoboticsDataClasses
                 }
                 public float CalculateReward()
                 {
-                    // Proximity and closing speed rewards
-                    float rwd_proximity;                    // +ve for being close to the satellite, up to a small limit where the model is penalised sharply for being too close (avoid collision with the satellite bus)
-                    /*float rwd_relativeVelocity;             // Function of distance and approach speed (penalise going too fast when close to the target), +ve for zero relative velocity inside "capture zone"
-
-                    // Angular velocity / heading rewards
-                    float rwd_heading;                      // +ve for orienting the satellite's forward axis to the target's position origin
-                    float rwd_axisOfRotationAlignment;      // Large +ve for aligning the satellite's forward axis with the satellite's axis of rotation
-                    float rwd_axisOfRotationRelativeSpeed;  // +ve for matching the satellite's magnitude of angular velocity in the satellite's forward axis
-
-                    // Contact and collision rewards
-                    float rwd_satelliteBodyCollision;       // Sharp -ve for collisions between the satellite body and the target, scaled with speed
-                    float rwd_gripperPadsInContact;         // +ve to encourage more gripper pads to contact the target
-                    float rwd_gripperPadsAverageNormal;     // +ve for "flat" gripper pad contact with with the target's surface
-
+                    // For-giggles test of CLAUDE Sonnet 4.5
+                    // Prompt:
+                    //      My project revolves around automating a satellite space debris removal process. My satellite has 24 RCS thrusters and 16 hinges making up four robotic grabbers. It is equipped with a LiDAR, which returns an array of raycast hit distances. However, for now, that is not really of consequence. This is my class which is currently handling observation collection, applying actions passed by the RL agent, and reward calculation:
+                    //      Given what you currently see, can you write a good-practice reward function that aims to have the satellite 'hover' at 1 unity-unit distance from the target object's origin? All forms of stability are appreciated (near-zero velocity when at the hover point, negliagible angular velocity, satellite "+y" aligns with the target origin, etc)
+                    //      Are you able to write the isolated Rewards.CalculateReward function for me, or do you need more information for me first?
+                    //      [pasted this class for context]
+                    // www.claude.ai
                     
-                    // Episode administration rewards
-                    float rwd_successBonus;                 // Large +ve for meeting successful capture criteria. Penalty on failure or episode time-out
-                    bool targetIsCaptured;                  // A bool representing confirmed target capture this step. If true for a specific number of steps, reward greatly and end the episode
-                    */
-
                     // Gathering scene data
-                    Vector3 displacement = satTransform.position - tarTransform.position;
+                    Vector3 displacement = tarTransform.position - satTransform.position; // satellite -> target
+                    float distance = displacement.magnitude;
                     Vector3 relativeVelocity = satRigidbody.velocity - tarRigidbody.velocity;
 
-                    /////////// TEMP
-                    // Goal: make the model "hover" at 1 unit of distance from the target
-                    ///////////
+                    // Get satellite's local +Y direction in world space
+                    Vector3 satelliteUp = satTransform.up;
 
-                    float distance = displacement.magnitude;
-                    rwd_proximity = (distance < 1) ? distance : 2 - distance;
-                    return rwd_proximity;
+                    // Direction from satellite to target
+                    Vector3 toTarget = displacement.normalized;
+
+                    // Angular velocities
+                    Vector3 satAngularVel = satRigidbody.angularVelocity;
+                    Vector3 tarAngularVel = tarRigidbody.angularVelocity;
+
+                    // ==================================================================
+                    // REWARD COMPONENTS
+                    // ==================================================================
+
+                    float totalReward = 0f;
+
+                    // 1. PROXIMITY REWARD: Encourage hovering at exactly 1.0 unit distance
+                    //    Peak reward at distance = 1.0, drops off smoothly on either side
+                    float targetDistance = 1.0f;
+                    float distanceError = Mathf.Abs(distance - targetDistance);
+                    float rwd_proximity = Mathf.Exp(-distanceError * 2f); // Gaussian-like peak at target distance
+                    totalReward += rwd_proximity * 1.0f; // Weight: 1.0
+
+                    // 2. VELOCITY REWARD: Penalize high relative velocity, especially when close
+                    //    We want near-zero relative velocity at the hover point
+                    float relSpeed = relativeVelocity.magnitude;
+                    float velocityScale = Mathf.Clamp01(2f - distance); // Penalize more when closer
+                    float rwd_velocity = -relSpeed * velocityScale * 0.5f; // Negative reward for speed
+                    totalReward += rwd_velocity;
+
+                    // 3. ALIGNMENT REWARD: Encourage satellite's +Y to point toward target
+                    //    Dot product: 1.0 when perfectly aligned, -1.0 when opposite
+                    float alignment = Vector3.Dot(satelliteUp, toTarget);
+                    float rwd_alignment = (alignment + 1f) * 0.5f; // Normalize to [0, 1]
+                    totalReward += rwd_alignment * 0.5f; // Weight: 0.5
+
+                    // 4. ANGULAR STABILITY REWARD: Penalize rotation of satellite
+                    //    We want minimal angular velocity for stable hovering
+                    float angularSpeed = satAngularVel.magnitude;
+                    float rwd_angularStability = -angularSpeed * 0.3f; // Negative reward for spinning
+                    totalReward += rwd_angularStability;
+
+                    // 5. ANGULAR VELOCITY MATCHING: When close, match target's rotation
+                    //    This helps with eventual capture
+                    if (distance < 1.5f)
+                    {
+                        Vector3 relativeAngularVel = satAngularVel - tarAngularVel;
+                        float relAngularSpeed = relativeAngularVel.magnitude;
+                        float rwd_angularMatching = -relAngularSpeed * 0.2f;
+                        totalReward += rwd_angularMatching;
+                    }
+
+                    // 6. BONUS REWARD: Large bonus for achieving stable hover conditions
+                    bool isAtTargetDistance = distanceError < 0.1f; // Within 10cm
+                    bool isStationary = relSpeed < 0.05f; // Nearly stopped
+                    bool isAligned = alignment > 0.9f; // Well aligned
+                    bool isStable = angularSpeed < 0.1f; // Minimal rotation
+
+                    if (isAtTargetDistance && isStationary && isAligned && isStable)
+                    {
+                        totalReward += 2.0f; // Large bonus for meeting all criteria
+                    }
+
+                    // 7. SAFETY PENALTY: Sharp penalty for getting too close (collision risk)
+                    if (distance < 0.5f)
+                    {
+                        float collisionRisk = (0.5f - distance) * 10f; // Steep penalty
+                        totalReward -= collisionRisk;
+                    }
+
+                    // 8. TIMEOUT PENALTY: Small penalty to encourage efficiency
+                    //    (You'd need to track episode time, but this encourages faster convergence)
+                    totalReward -= 0.01f; // Small per-step penalty
+
+                    return totalReward;
                 }
             }
         }

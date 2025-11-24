@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   thrusterPower: 100
+  thrusterISP: 300
   input: 0
   input_manual: 0
   input_manual_isUpdated: 0

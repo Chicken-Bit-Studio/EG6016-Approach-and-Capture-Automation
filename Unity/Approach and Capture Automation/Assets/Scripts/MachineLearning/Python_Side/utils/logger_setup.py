@@ -12,6 +12,10 @@ import time
 import shutil
 import logging
 import csv
+import platform
+import subprocess
+import webbrowser
+import socket
 from utils.config import MAX_RUN_HISTORY
 
 def initialise_logger(algorithm_name: str, base_path: str) -> tuple[str, logging.Logger]:
@@ -83,6 +87,81 @@ def _enforce_retention(log_root: str, max_runs: int):
         except Exception as e:
             print(f"[logger_setup] Warning: Could not remove {old_dir}: {e}")
 
+
+# ---------------------------------------------------------------------------
+# TensorBoard utilities
+# ---------------------------------------------------------------------------
+
+def is_port_in_use(port):
+    """Check if a port is already in use."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+def launch_tensorboard(log_dir, port=6006):
+    """
+    Launches TensorBoard in a separate process and opens browser.
+    Kills any existing TensorBoard processes first.
+    
+    Parameters
+    ----------
+    log_dir : str
+        Path to the tensorboard logs directory
+    port : int
+        Port for TensorBoard web interface (default: 6006)
+    
+    Returns
+    -------
+    subprocess.Popen
+        The TensorBoard process (so you can kill it later if needed)
+    """
+    try:
+        # Check if TensorBoard is already running and kill it
+        if is_port_in_use(port):
+            print(f"\033[93m[TensorBoard] Port {port} in use, killing existing TensorBoard...\033[0m")
+            if platform.system() == "Windows":
+                subprocess.run(["taskkill", "/F", "/IM", "tensorboard.exe"], 
+                              capture_output=True, check=False)
+                time.sleep(2)  # Give it time to die
+            else:
+                # For Linux/Mac, find and kill the process using the port
+                subprocess.run(["pkill", "-f", "tensorboard"], check=False)
+                time.sleep(2)
+        
+        # Launch TensorBoard as a background process
+        print(f"\033[96m[TensorBoard] Launching on port {port}...\033[0m")
+        
+        # Use CREATE_NEW_CONSOLE on Windows to open in separate window
+        if platform.system() == "Windows":
+            tensorboard_process = subprocess.Popen(
+                ["tensorboard", "--logdir", log_dir, "--port", str(port)],
+                creationflags=subprocess.CREATE_NEW_CONSOLE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        else:
+            tensorboard_process = subprocess.Popen(
+                ["tensorboard", "--logdir", log_dir, "--port", str(port)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+        
+        # Give TensorBoard a moment to start up
+        time.sleep(3)
+        
+        # Open browser automatically
+        url = f"http://localhost:{port}"
+        print(f"\033[92m[TensorBoard] Opening browser at {url}\033[0m")
+        webbrowser.open(url)
+        
+        return tensorboard_process
+        
+    except FileNotFoundError:
+        print(f"\033[91m[TensorBoard] Error: 'tensorboard' command not found.\033[0m")
+        print(f"\033[93m[TensorBoard] Install with: pip install tensorboard\033[0m")
+        return None
+    except Exception as e:
+        print(f"\033[91m[TensorBoard] Failed to launch: {e}\033[0m")
+        return None
 
 # ---------------------------------------------------------------------------
 # CSV summary utilities

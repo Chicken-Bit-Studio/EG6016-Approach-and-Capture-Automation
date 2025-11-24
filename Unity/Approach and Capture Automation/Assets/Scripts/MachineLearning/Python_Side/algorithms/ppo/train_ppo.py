@@ -27,7 +27,8 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT not in sys.path:
     sys.path.append(ROOT)
 from utils import config
-from utils.logger_setup import initialise_logger, create_csv_logger, append_csv_row
+from utils.logger_setup import initialise_logger, create_csv_logger, append_csv_row, launch_tensorboard
+from utils.smart_path_junction_handler import handle_long_path
 from unity_remote.unity_env_wrapper import UnityEnvWrapper
 
 
@@ -58,9 +59,11 @@ class ProgressLoggerCallback(BaseCallback):
         if (self.num_timesteps - self.last_log_step) >= self.console_interval:
             self.last_log_step = self.num_timesteps
 
-            # Safe mean (sometimes no episodes completed yet)
-            mean_reward = np.mean(self.model.ep_info_buffer) \
-                if len(self.model.ep_info_buffer) > 0 else 0.0
+            # Extract episode rewards from the info buffer
+            if len(self.model.ep_info_buffer) > 0:
+                mean_reward = np.mean([ep_info['r'] for ep_info in self.model.ep_info_buffer])
+            else:
+                mean_reward = 0.0
             ep_count = len(self.model.ep_info_buffer)
 
             self.logger.info(f"[Progress] Steps={self.num_timesteps:,} | "
@@ -82,17 +85,22 @@ def main():
     algo_name = "ppo"
 
     # --- Initialise logger ---
+    # Note: Using a temporary folder for TensorBoard logs to debug
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     run_dir, logger = initialise_logger(algo_name, base_path)
-    """tb_root = os.path.join(run_dir, "tensorboard")
-    os.makedirs(tb_root, exist_ok=True)"""
-    tb_root = os.path.join(r"C:\Users\bense\Desktop", "tensorboard")
-    os.makedirs(tb_root, exist_ok=True)
-    # check: ensure the tb_root is writable
+    tb_root_original = os.path.join(run_dir, "tensorboard")
+    #tb_root_original = r"C:\Junctions"
+    os.makedirs(tb_root_original, exist_ok=True)
+    tb_root = handle_long_path(path=tb_root_original, junctionName="tb_write") 
+    # Verify the path is writable
     if not os.access(tb_root, os.W_OK):
         logger.error("TensorBoard log folder is not writable: %s", tb_root)
-        tb_root = None  # disable if not writable
-    print(f"\033[96m TensorBoard log folder check stage complete. \n\tPath: {tb_root} \n\tPath length: {len(tb_root)} \033[0m")
+        tb_root = None
+    if tb_root:
+        # Point TensorBoard at LogsAndVisualisations to see all runs. Launch it automatically.
+        logs_visualizations = handle_long_path(path=os.path.dirname(run_dir), junctionName="tb_read")
+        tensorboard_process = launch_tensorboard(logs_visualizations)
+        #tensorboard_process = launch_tensorboard(r"C:\Junctions\PPO_1")
     print(f"\033[92m Initialised logging stage complete \033[0m")
 
     # --- Create Unity environment ---

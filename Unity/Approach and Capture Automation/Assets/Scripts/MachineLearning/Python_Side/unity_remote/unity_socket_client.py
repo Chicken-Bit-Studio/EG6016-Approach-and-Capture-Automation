@@ -77,7 +77,6 @@ class UnitySocketClient:
         Reads a handshake packet from Unity:
         [opcode(int32)=100][obs_len(int32)][act_len(int32)]
         """
-        print("Waiting for handshake from Unity...")
         data = self._recvall(12)
         opcode, obs_len, act_len = struct.unpack("<3i", data)
         if opcode != self.OPCODE_HANDSHAKE:

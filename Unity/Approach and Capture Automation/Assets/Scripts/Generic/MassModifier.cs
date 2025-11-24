@@ -23,7 +23,7 @@ public class MassModifier : MonoBehaviour
             enabled = false;
             return;
         }
-        Debug.Log($"[MassModifier] Initialized with total mass {rb.mass}kg. Dry: {dryMass}kg, Fuel: {ft.startingFuelKilograms}kg.");
+        //Debug.Log($"[MassModifier] Initialized with total mass {rb.mass}kg. Dry: {dryMass}kg, Fuel: {ft.startingFuelKilograms}kg.");
     }
     void Update()
     {

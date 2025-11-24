@@ -57,6 +57,8 @@ MonoBehaviour:
           lidarCount: 0
         gripperPads:
           gripperPadCount: 0
+        fuelTanks:
+          fuelTankCount: 0
       plants:
         plantCount: 0
         actuators:

@@ -44,9 +44,9 @@ public class FuelTankMonoBehaviour : MonoBehaviour
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // If the fuel tank starting parameters were not set up, return a small zero-vector
-        if (startingFuelKilograms == 0)
+        if (startingFuelKilograms == 0 || remainingFuelKilograms > startingFuelKilograms)
         {
-            Debug.LogWarning("GetMLObservation was called on a ActuatorMonoBehaviour, but it wasn't set up and returned (false, null).");
+            Debug.LogWarning("GetMLObservation was called on a FuelTankMonoBehaviour, but it wasn't set up correctly and returned (false, null).");
             return (false, null);
         }
 

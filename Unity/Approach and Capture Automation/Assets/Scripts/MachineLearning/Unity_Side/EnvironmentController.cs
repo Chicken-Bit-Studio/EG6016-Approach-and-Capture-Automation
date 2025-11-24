@@ -83,8 +83,6 @@ public class EnvironmentController : MonoBehaviour
         [Header("Episode Management")]
         [Tooltip("Seconds before episode timeout.")]
         public float maxEpisodeTime = 25f;
-        [Tooltip("The simulated time between each step.")]
-        [ReadOnly] public float deltaTime = 0.02f;
         [Tooltip("Time elapsed this episode.")]
         [ReadOnly] public float elapsedTime = 0f;
 
@@ -156,6 +154,7 @@ public class EnvironmentController : MonoBehaviour
         // See: CustomInspector_EnvironmentController
         // This boolean is not supposed to change during runtime.
         public const bool useFixedUpdateOnStart = false;
+        // The simulated time between each step.
         public const float PHYSICS_TIMESTEP = 0.02f; // 50Hz
         private List<IPhysicsSteppable> physicsObjects;
 
@@ -233,11 +232,11 @@ public class EnvironmentController : MonoBehaviour
         // If the episode has finished, return a shortedned package early
         if (episodeSettings.episodeDone) { return (new float[1], 0f, true); }   // TODO: use calculated length
         // Increment the episode clock by one unit of deltaTime
-        episodeSettings.elapsedTime += episodeSettings.deltaTime;
+        episodeSettings.elapsedTime += PhysicsControl.PHYSICS_TIMESTEP;
         // Apply actions to satellite
         ApplyAction(action, isDebugStep);
         // Advance physics by one 'step' (time-domain)
-        Physics.Simulate(episodeSettings.deltaTime);
+        physicsControl.StepPhysics(PhysicsControl.PHYSICS_TIMESTEP);
         // Compute and increment reward
         float reward = ComputeReward();
         episodeSettings.episodeReward += reward;
@@ -344,6 +343,18 @@ public class EnvironmentController : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// Returns the sizes of the observation and action arrays for the initial server handshake.
+    /// See EnvironmentSocketServer for usage.
+    /// </summary>
+    public (int, int) GetObservationAndActionArraySizes()
+    {
+        // TODO: Review this for efficiency later
+        int obsSize = CollectObservations().Length;
+        int actSize = ReinforcementLearning.ApproachAndCaptureProject.Actions.FEED_SIZE;
+        return (obsSize, actSize);
+    }
+    
     // Called by a custom button in the Inspector window. See CustomInspector_EnvironmentController for more details.
     public void ManualStep()
     {

@@ -65,7 +65,7 @@ CLIP_RANGE = 0.2
 # =============================================================================
 
 # Total number of timesteps each training session runs for
-TOTAL_TIMESTEPS = 32_000#1_000_000
+TOTAL_TIMESTEPS = 1_000_000
 
 # How often evaluation episodes occur (in timesteps)
 EVAL_FREQ = 50_000
