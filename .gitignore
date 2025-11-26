@@ -1,41 +1,33 @@
-###
-# Unity folders and files
-###
-[Aa]ssets/AssetStoreTools*
-[Bb]uild/
-[Ll]ibrary/
-[Ll]ocal[Cc]ache/
-[Oo]bj/
-[Tt]emp/
-[Uu]nityGenerated/
-# file on crash reports
-sysinfo.txt
-# Unity3D generated meta files
-*.pidb.meta
+# -------------------------
+# Root level universal ignores
+# -------------------------
 
-###
-# VS/MD solution and project files
-###
-[Ee]xportedObj/
-*.booproj
-*.csproj
-*.sln
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor and IDE files (global)
+.vscode/
+.idea/
 *.suo
-*.svd
-*.unityproj
 *.user
 *.userprefs
-*.pidb
-.DS_Store
 
-###
-# OS generated
-###
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-Icon?
-ehthumbs.db
-Thumbs.db
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# Secrets and environment files (if any at repo root)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem

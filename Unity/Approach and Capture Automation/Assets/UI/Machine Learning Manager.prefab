@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8951792057164328757}
   - component: {fileID: 4035324185815343394}
-  - component: {fileID: 3335243153204194322}
+  - component: {fileID: 1606530120647406648}
   m_Layer: 0
   m_Name: Machine Learning Manager
   m_TagString: Untagged
@@ -74,7 +74,6 @@ MonoBehaviour:
     targetStartingRotation: {x: 0.10483404, y: -0.22177814, z: 0.41430008, w: -0.8764586}
   episodeSettings:
     maxEpisodeTime: 60
-    deltaTime: 0.02
     elapsedTime: 0
     episodeDone: 0
     episodeReward: 0
@@ -83,7 +82,7 @@ MonoBehaviour:
     maximumStartingSpeed: 0.3
     maximumAngularOffset: 20
     maximumAngularSpeed: 15
---- !u!114 &3335243153204194322
+--- !u!114 &1606530120647406648
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -92,7 +91,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 4089481651138545355}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 90f68596c088369498d740c61842eddd, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d410e2a04743824ebcde75bf9b3b6de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   envController: {fileID: 4035324185815343394}

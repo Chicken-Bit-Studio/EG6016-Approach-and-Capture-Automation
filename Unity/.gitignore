@@ -1,0 +1,69 @@
+# -------------------------
+# Unity project ignore rules
+# -------------------------
+
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]nityGenerated/
+[Ll]ocal[Cc]ache/
+
+# Asset Store Tools
+[Aa]ssets/AssetStoreTools*
+
+# Never commit UserSettings
+UserSettings/
+
+# Auto generated IDE and Unity glue files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pidb.meta
+*.sln.iml
+
+# Exported Unity objects
+[Ee]xportedObj/
+
+# Crash reports and profiler data
+*.stacktrace
+*.dmp
+*.diag
+ProfilerCapture/
+sysinfo.txt
+
+# Unity Package Manager caches
+Library/PackageCache/
+Library/ScriptAssemblies/
+Library/PackageManager/ProjectCache/
+
+# Visual Studio, JetBrains Rider, VS Code
+.vscode/
+.idea/
+
+# Local build artifacts
+*.apk
+*.aab
+.gradle/
+.gradle-cache/
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+Thumbs.db

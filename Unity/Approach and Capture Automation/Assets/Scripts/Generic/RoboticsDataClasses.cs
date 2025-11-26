@@ -491,7 +491,7 @@ public static class RoboticsDataClasses
                 IModel modelInterface;
                 float[] receivedFloats;
 
-                // For now, the model prefab is "locked-in" - it won't be changed. We can use a constant to validate action size now, but this isn't automatically scalable.
+                // TODO: For now, the model prefab is "locked-in" - it won't be changed. We can use a constant to validate action size now, but this isn't automatically scalable.
                 // floats 0.0 - 1.0 for each:
                 //   actuators: 16
                 //   thrusters: 24

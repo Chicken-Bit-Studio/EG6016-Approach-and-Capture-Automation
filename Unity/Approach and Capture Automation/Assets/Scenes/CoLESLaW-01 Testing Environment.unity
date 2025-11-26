@@ -122,16 +122,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &517608806 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
-  m_PrefabInstance: {fileID: 1646700935}
-  m_PrefabAsset: {fileID: 0}
---- !u!54 &517608810 stripped
-Rigidbody:
-  m_CorrespondingSourceObject: {fileID: 4644353065356157219, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
-  m_PrefabInstance: {fileID: 1646700935}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &684930610
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -351,7 +341,7 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5a45cf7718e9ea344b2a8457ec7ea8ea, type: 3}
---- !u!1001 &1646700935
+--- !u!1001 &1631743532
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -363,17 +353,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: CoLESLaW-01
       objectReference: {fileID: 0}
-    - target: {fileID: 2520262525100258071, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
-      propertyPath: imageParameters.lidarUIImage
-      value: 
-      objectReference: {fileID: 1853960254}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0000064341857
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.0000074406244
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalPosition.z
@@ -381,19 +367,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071082
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.70710546
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.0000011824554
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.0000011827824
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2942524648295809199, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -412,17 +398,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
---- !u!114 &1853960254 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6052628047152324849, guid: 59ed4e32b8ff6284d897bd175043fae1, type: 3}
-  m_PrefabInstance: {fileID: 684930610}
+--- !u!1 &1631743533 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
+  m_PrefabInstance: {fileID: 1631743532}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1866291393 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4372590396694272620, guid: 5a45cf7718e9ea344b2a8457ec7ea8ea, type: 3}
@@ -481,15 +461,19 @@ PrefabInstance:
     - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: references.satelliteRigidbody
       value: 
-      objectReference: {fileID: 517608810}
+      objectReference: {fileID: 0}
     - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: references.satelliteGameObject
       value: 
-      objectReference: {fileID: 517608806}
+      objectReference: {fileID: 0}
+    - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
+      propertyPath: references.satelliteGameObjectPrefab
+      value: 
+      objectReference: {fileID: 1260084871158298781, guid: 834d9660ebfa38b47bb1fea2db4dd32c, type: 3}
     - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: references.satelliteGameObjectInScene
       value: 
-      objectReference: {fileID: 517608806}
+      objectReference: {fileID: 1631743533}
     - target: {fileID: 4089481651138545355, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: m_Name
       value: Machine Learning Manager
@@ -606,5 +590,5 @@ SceneRoots:
   - {fileID: 4044733416961883970}
   - {fileID: 684930610}
   - {fileID: 8118871114320339635}
-  - {fileID: 1646700935}
   - {fileID: 993185392}
+  - {fileID: 1631743532}

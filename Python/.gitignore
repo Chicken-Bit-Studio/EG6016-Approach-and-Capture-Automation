@@ -1,0 +1,57 @@
+# -------------------------
+# Python project ignore rules
+# -------------------------
+
+# Bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Packaging and distribution output
+build/
+dist/
+sdist/
+*.egg-info/
+.eggs/
+develop-eggs/
+parts/
+var/
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-wheel-metadata/
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyInstaller
+*.spec
+
+# Unit test and coverage
+.tox/
+.nox/
+.pytest_cache/
+.coverage
+.coverage.*
+.cache/
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Mypy and type checkers
+.mypy_cache/
+.dmypy.json
+
+# IDE folders
+.vscode/
+.idea/
+
+# Misc
+*.log

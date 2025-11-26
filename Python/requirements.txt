@@ -1,0 +1,17 @@
+# Core RL Framework
+stable-baselines3==2.3.2
+gymnasium==0.29.1
+
+# Deep Learning Backend
+torch==2.2.2
+
+# Utilities
+numpy==1.26.4
+rich==13.7.0
+
+# Logging and Monitoring
+tensorboard==2.15.1
+
+# Testing
+pytest==8.0.0
+pytest-cov==4.1.0

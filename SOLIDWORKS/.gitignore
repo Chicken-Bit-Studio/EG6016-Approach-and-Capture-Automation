@@ -1,0 +1,41 @@
+# -------------------------
+# SOLIDWORKS project ignore rules
+# -------------------------
+
+# Temporary lock files (SolidWorks creates ~$ files when a document is open)
+~$*
+
+# Backup, auto-recover and temporary variants
+*.bak
+*.bkw
+*.swar
+*.tts
+*.bck
+*.tmp
+
+# Backup naming patterns often produced by add ins or Save-As-Backup workflows
+*backup*.sldprt
+*backup*.sldasm
+*backup*.slddrw
+
+# Simulation and analysis temporary files
+*.sim*
+*.zipx
+
+# If these ever appear inside the repo by accident
+tmp_swx*/
+swx_temp*/
+
+# General OS cruft
+.DS_Store
+Thumbs.db
+
+# Visual Studio or IDE misc (if using macros or SolidWorks API projects)
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Note:
+# Native CAD files like .sldprt, .sldasm, .slddrw are intentionally NOT ignored.
+# Use Git LFS if you intend to commit large binary design files.
