@@ -1,0 +1,14 @@
+Best Model Information
+==================================================
+Run ID: run_20251127_210803
+Timesteps: 4,392
+Episodes Completed: 1
+Mean Reward: 1148.29
+Saved At: 2025-11-27 21:10:46
+
+Hyperparameters:
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99

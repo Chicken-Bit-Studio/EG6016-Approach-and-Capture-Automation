@@ -137,11 +137,11 @@ public class GripperPadMonoBehaviour : MonoBehaviour
     private bool IsCollisionWithTarget(Collision collision)
     {
         Transform t = collision.transform;
-        if (t == environmentController.references.targetGameObject.transform) { return true; }
+        if (t == environmentController.references.targetGameObjectInScene.transform) { return true; }
         // Check parent chain
         while (t != null)
         {
-            if (t == environmentController.references.targetGameObject.transform) { return true; }
+            if (t == environmentController.references.targetGameObjectInScene.transform) { return true; }
             t = t.parent;
         }
         return false;
@@ -166,7 +166,7 @@ public class GripperPadMonoBehaviour : MonoBehaviour
 
 
         // Validate configuration
-        if (environmentController.references.targetGameObject == null)
+        if (environmentController.references.targetGameObjectInScene == null)
         {
             // Not configured - caller can decide how to handle this
             return (false, null);

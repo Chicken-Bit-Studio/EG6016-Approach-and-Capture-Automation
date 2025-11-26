@@ -13,6 +13,7 @@ desktop.ini
 *.suo
 *.user
 *.userprefs
+.claude/
 
 # Logs and temp files
 *.log

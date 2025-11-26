@@ -31,7 +31,8 @@ public class EnvironmentController : MonoBehaviour
 
         [Header("Target Object")]
         [Tooltip("The object being captured.")]
-        public GameObject targetGameObject;
+        public GameObject targetGameObjectInScene;
+        public GameObject targetGameObjectPrefab;
         [ReadOnly] public Rigidbody targetRigidbody;
         [ReadOnly] public Collider targetCollider;
 
@@ -56,10 +57,10 @@ public class EnvironmentController : MonoBehaviour
             // Generate the satellite's IModel interface
             satelliteModelInterface = new IModel(satelliteGameObjectInScene);
             // Cache the rigidbody references
-            if (satelliteGameObjectInScene == null || targetGameObject == null) { throw new NullReferenceException("Assign satellite and target gameobjects first!"); }
+            if (satelliteGameObjectInScene == null || targetGameObjectInScene == null) { throw new NullReferenceException("Assign satellite and target gameobjects first!"); }
             satelliteRigidbody = satelliteGameObjectInScene.GetComponent<Rigidbody>();
-            targetRigidbody = targetGameObject.GetComponent<Rigidbody>();
-            targetCollider = targetGameObject.GetComponent<Collider>();
+            targetRigidbody = targetGameObjectInScene.GetComponent<Rigidbody>();
+            targetCollider = targetGameObjectInScene.GetComponent<Collider>();
         }
 
         // Cached initial transform data
@@ -71,8 +72,8 @@ public class EnvironmentController : MonoBehaviour
         {
             satelliteStartingPosition = satelliteGameObjectInScene.transform.position;
             satelliteStartingRotation = satelliteGameObjectInScene.transform.rotation;
-            targetStartingPosition = targetGameObject.transform.position;
-            targetStartingRotation = targetGameObject.transform.rotation;
+            targetStartingPosition = targetGameObjectInScene.transform.position;
+            targetStartingRotation = targetGameObjectInScene.transform.rotation;
         }
 
 
@@ -82,7 +83,7 @@ public class EnvironmentController : MonoBehaviour
     {
         [Header("Episode Management")]
         [Tooltip("Seconds before episode timeout.")]
-        public float maxEpisodeTime = 25f;
+        public float maxEpisodeTime = 40f;
         [Tooltip("Time elapsed this episode.")]
         [ReadOnly] public float elapsedTime = 0f;
         [Tooltip("Steps taken this episode.")]
@@ -91,8 +92,9 @@ public class EnvironmentController : MonoBehaviour
         [ReadOnly] public int framesThisEpisode = 0;
 
         [Header("Episode State Tracking")]
-        [ReadOnly] public bool episodeDone = false;
         [ReadOnly] public float episodeReward = 0f;
+        [ReadOnly] public bool reportOnEpisodeEnd = false;
+        [HideInInspector] public bool episodeDone = false;
     }
     [Serializable]
     public class EpisodeRandomisation
@@ -112,38 +114,45 @@ public class EnvironmentController : MonoBehaviour
 
             // Destoy and recreate the satellite from prefab to ensure clean state
             DestroyImmediate(references.satelliteGameObjectInScene);
-            references.satelliteGameObjectInScene = Instantiate(references.satelliteGameObjectPrefab);
+            references.satelliteGameObjectInScene = Instantiate(
+                original: references.satelliteGameObjectPrefab,
+                position: references.satelliteStartingPosition,
+                rotation: references.satelliteStartingRotation);
+            // Do the same for the target object
+            DestroyImmediate(references.targetGameObjectInScene);
+            references.targetGameObjectInScene = Instantiate(
+                original: references.targetGameObjectPrefab,
+                position: references.targetStartingPosition,
+                rotation: references.targetStartingRotation);
             // Refresh runtime references to rigidbodies, colliders and IModel interface
             references.RefreshRuntimeReferences();
-
-            // TODO: Add target reinstantiation from prefab here if needed in future
 
             // Reset the satellite
             RandomiseObjectVelocity(references.satelliteRigidbody);
             RandomiseObjectAngularVelocity(references.satelliteRigidbody);
-            RandomiseObjectPosition(references.satelliteGameObjectInScene.transform, references.satelliteStartingPosition);
-            RandomiseObjectRotation(references.satelliteGameObjectInScene.transform, references.satelliteStartingRotation, constained: true);
+            RandomiseObjectPosition(references.satelliteGameObjectInScene.transform);
+            RandomiseObjectRotation(references.satelliteGameObjectInScene.transform, constained: true);
             //Reset the target
             RandomiseObjectAngularVelocity(references.targetRigidbody);
-            RandomiseObjectRotation(references.targetGameObject.transform, references.targetStartingRotation, constained: false);
+            RandomiseObjectRotation(references.targetGameObjectInScene.transform, constained: false);
 
             // Local randomisation methods
-            void RandomiseObjectPosition(Transform transform, Vector3 cachedPosition)
+            void RandomiseObjectPosition(Transform objTransform)
             {
-                transform.position = UnityEngine.Random.onUnitSphere * UnityEngine.Random.Range(0, maximumPositionalOffset) + cachedPosition;
+                objTransform.position = UnityEngine.Random.onUnitSphere * UnityEngine.Random.Range(0, maximumPositionalOffset) + objTransform.position;
             }
             void RandomiseObjectVelocity(Rigidbody rigidbody)
             {
                 rigidbody.velocity = UnityEngine.Random.onUnitSphere * UnityEngine.Random.Range(0, maximumStartingSpeed);
             }
-            void RandomiseObjectRotation(Transform transform, Quaternion cachedRotation, bool constained)
+            void RandomiseObjectRotation(Transform objTransform, bool constained)
             {
                 Vector3 randomAxis = UnityEngine.Random.onUnitSphere;
                 float randomAngle = constained ?
                     UnityEngine.Random.Range(0, maximumAngularOffset) :
                     UnityEngine.Random.Range(-180f, 180f);
                 Quaternion headingOffset = Quaternion.AngleAxis(randomAngle, randomAxis);
-                transform.rotation = headingOffset * cachedRotation;
+                objTransform.rotation = headingOffset * objTransform.rotation;
             }
             void RandomiseObjectAngularVelocity(Rigidbody rigidbody)
             {
@@ -160,12 +169,13 @@ public class EnvironmentController : MonoBehaviour
         public const bool useFixedUpdateOnStart = false;
         // The simulated time between each step.
         public const float PHYSICS_TIMESTEP = 0.02f; // 50Hz
+        public const float PHYSICS_SETTLE_TIME = 0.001f;
         private List<IPhysicsSteppable> physicsObjects;
 
         public void Awake_Manual()
         {
             // Find all objects implementing IPhysicsSteppable in the scene for the first time
-            RecollectPhysicsObjects();
+            CollectPhysicsObjectsInScene();
             Debug.Log($"Found {physicsObjects.Count} physics-steppable objects at the start of the scene.");
             // Turn off automatic physics if configured to do so on startup
             Physics.simulationMode = useFixedUpdateOnStart ? SimulationMode.FixedUpdate : SimulationMode.Script;
@@ -174,7 +184,7 @@ public class EnvironmentController : MonoBehaviour
         {
             if (Physics.simulationMode == SimulationMode.FixedUpdate) { StepPhysics(Time.fixedDeltaTime); }
         }
-        public void RecollectPhysicsObjects()
+        public void CollectPhysicsObjectsInScene()
         {
             // Find all objects implementing IPhysicsSteppable in the scene
             physicsObjects = new List<IPhysicsSteppable>(FindObjectsOfType<MonoBehaviour>().OfType<IPhysicsSteppable>());
@@ -198,8 +208,8 @@ public class EnvironmentController : MonoBehaviour
         references.Start_Manual();  // 6-10ms
         // Collect physics-steppable objects in the scene and turn off automatic physics if configured to do so on startup
         physicsControl.Awake_Manual();
-        // Reset the scene once at start
-        ResetEnvironment();
+        // Reset the scene once at start. Skip settling as to avoid calling Physics.StepPhysics before other scripts' Start() methods have run.
+        ResetEnvironment(skipSettle: true);
     }
 
     void FixedUpdate()
@@ -219,7 +229,7 @@ public class EnvironmentController : MonoBehaviour
     /// This is called at the beginning of each episode.
     /// This is preferred over reloading the Unity scene because it is quicker and foregoes the startup mumbo jumbo.
     /// </summary>
-    public void ResetEnvironment()
+    public void ResetEnvironment(bool skipSettle = false)
     {
         // Wiping the episode tracking values
         episodeSettings.episodeDone = false;
@@ -230,7 +240,11 @@ public class EnvironmentController : MonoBehaviour
         // Randomise the episode starting conditions
         episodeRandomisation.RandomiseForEpisodeStart(referencesClassInstance: references);
         // Recollect physics-steppable objects as they were destroyed/reinstantiated during randomisation
-        physicsControl.RecollectPhysicsObjects();
+        physicsControl.CollectPhysicsObjectsInScene();
+        // Force physics to sync with transform changes
+        Physics.SyncTransforms();
+        // Tiny micro-step to settle physics
+        if (!skipSettle) { physicsControl.StepPhysics(PhysicsControl.PHYSICS_SETTLE_TIME); }
     }
 
     /// <summary>
@@ -294,7 +308,7 @@ public class EnvironmentController : MonoBehaviour
             modelInterface: references.satelliteModelInterface,
             satellite: references.satelliteGameObjectInScene.transform,
             satelliteRb: references.satelliteRigidbody,
-            target: references.targetGameObject.transform,
+            target: references.targetGameObjectInScene.transform,
             targetRb: references.targetRigidbody
         ).SendToFloatArray();
     }
@@ -309,24 +323,9 @@ public class EnvironmentController : MonoBehaviour
         return new ReinforcementLearning.ApproachAndCaptureProject.Rewards(
             satTransform: references.satelliteGameObjectInScene.transform,
             satRigidbody: references.satelliteRigidbody,
-            tarTransform: references.targetGameObject.transform,
+            tarTransform: references.targetGameObjectInScene.transform,
             tarRigidbody: references.targetRigidbody
         ).CalculateReward();
-        /*float dist = Vector3.Distance(references.satelliteGameObject.transform.position, references.targetGameObject.transform.position);
-        float speed = references.satelliteRigidbody.velocity.magnitude;
-
-        float reward = -0.1f * dist - 0.01f * speed;
-
-        
-            Reward inclusions:
-            public float fuelConsumed;      // The arbitrarily-measured, cumulative combined net RCS thruster output since episode start (satellite only)
-        
-
-        // Bonus if within 0.5m
-        if (dist < 0.5f)
-            reward += 1.0f;
-
-        return reward;*/
     }
 
     /// <summary>
@@ -334,19 +333,19 @@ public class EnvironmentController : MonoBehaviour
     /// </summary>
     private bool CheckDone()
     {
-        float dist = Vector3.Distance(references.satelliteGameObjectInScene.transform.position, references.targetGameObject.transform.position);
+        float dist = Vector3.Distance(references.satelliteRigidbody.position, references.targetRigidbody.position);
 
         // Fail if time limit reached
         if (episodeSettings.elapsedTime >= episodeSettings.maxEpisodeTime)
         {
-            ReportReasonString($"time limit reached ({episodeSettings.maxEpisodeTime:F2}s)");
+            if (episodeSettings.reportOnEpisodeEnd) { ReportReasonString($"Time limit reached ({episodeSettings.maxEpisodeTime:F2}s)"); }
             return true;
         }
 
         // Fail if satellite drifts too far
         if (dist > 30f)
         {
-            ReportReasonString($"Episode done: satellite drifted too far (dist={dist:F2}m)");
+            if (episodeSettings.reportOnEpisodeEnd) { ReportReasonString($"Satellite drifted too far (dist={dist:F2}m)"); }
             return true;
         }
 
@@ -362,8 +361,7 @@ public class EnvironmentController : MonoBehaviour
             Debug.Log($"Episode done: {reason}. " +
                 $"Time elapsed: {episodeSettings.elapsedTime:F2}s. " +
                 $"Frames elapsed: {episodeSettings.framesThisEpisode}. " +
-                $"Steps taken: {episodeSettings.stepsThisEpisode}."
-            );
+                $"Steps taken: {episodeSettings.stepsThisEpisode}.");
         }
     }
 
@@ -378,7 +376,7 @@ public class EnvironmentController : MonoBehaviour
         int actSize = ReinforcementLearning.ApproachAndCaptureProject.Actions.FEED_SIZE;
         return (obsSize, actSize);
     }
-    
+
     /// <summary>
     /// Called by a custom button in the Inspector window. See CustomInspector_EnvironmentController for more details.
     /// </summary>

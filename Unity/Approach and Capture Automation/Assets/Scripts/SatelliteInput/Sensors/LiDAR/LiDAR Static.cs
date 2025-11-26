@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using Microsoft.Unity.VisualStudio.Editor;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;

@@ -6,10 +6,11 @@ public class ThrusterMonoBehaviour : MonoBehaviour, IPhysicsSteppable
 {
     [Header("Thruster Properties")]
     [Tooltip("The maximum thrust the thruster can produce in newtons.")]
-    [Range(1f, 1000)]
-    public float thrusterPower = 500f;
+    [Range(1f, 10f)]
+    public float thrusterPower = 2f;
     [Tooltip("The specific impulse of the thruster in seconds.")]
-    public float thrusterISP = 300f;
+    [Range(50f, 320f)]
+    public float thrusterISP = 210f;
 
     [Header("Value Tracking")]
     [Tooltip("The input signal to control the object's thrust. 0.0-1.0")]

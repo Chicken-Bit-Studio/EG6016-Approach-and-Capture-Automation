@@ -62,7 +62,7 @@ public class ActuatorMonoBehaviour : MonoBehaviour, IPhysicsSteppable
         [ReadOnly] public HingeJoint hingeJoint;
     }
 
-    void Start()
+    void Awake()
     {
         // Validate and collect Tranform references - catch cases where this segment might be a root or leaf transform.
         if (transform.childCount == 0 || transform.parent == null)

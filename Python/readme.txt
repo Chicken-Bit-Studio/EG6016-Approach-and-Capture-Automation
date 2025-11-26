@@ -96,7 +96,7 @@ Step 3: Verify Unity Setup
 Project Root/
 ├── README.txt                          # This file
 ├── Unity/                              # Unity project directory
-│   └── Assets/Scripts/
+│   └── Assets/Scripts/MachineLearning/
 │       ├── UnityMLServer.cs           # TCP server for Python communication
 │       └── EnvironmentController.cs    # Environment management
 └── Python/                             # Self-contained Python codebase
@@ -200,6 +200,12 @@ Colors:
     INFO = '\033[96m'                # Cyan
     (Edit these to customize console output colors)
 
+TensorBoard:
+    PORT = 6006                      # Web interface port
+    AUTO_LAUNCH = True               # Launch on training start
+    AUTO_OPEN_BROWSER = True         # Open browser automatically
+    STARTUP_WAIT = 3.0               # Seconds to wait before opening
+
 Modifying Configuration:
 ------------------------
 1. Open Python/configs/config.py
@@ -255,8 +261,8 @@ Manual Launch:
 --------------
 If automatic launch fails:
 1. Open Command Prompt
-2. Navigate to Python/algorithms/ppo/LogsAndVisualisations/
-3. Run: tensorboard --logdir=tensorboard --port=6006
+2. Navigate to Python/algorithms/ppo/
+3. Run: tensorboard --logdir=LogsAndVisualisations/tensorboard --port=6006
 4. Open browser to: http://localhost:6006
 
 Viewing Multiple Runs:
@@ -337,6 +343,7 @@ Adding a new algorithm (e.g., A2C):
 
 4. Modify training script:
    - Import A2C from stable_baselines3
+   - Import config: from configs.config import A2C, TensorBoard as TBConfig, ...
    - Use configs.config.A2C for hyperparameters
    - Update algorithm_name to "a2c"
 
@@ -399,6 +406,14 @@ Solution:
 - Try adjusting learning rate
 - Verify observations contain useful information
 - Ensure action space is appropriate
+
+Problem: TensorBoard shows "No dashboards are active for the current data set"
+Solution:
+- Ensure training ran for at least one policy update (~2048 steps with default config)
+- Check event files are not empty (should be >1KB after first update)
+- Verify tensorboard directory contains subdirectories with .tfevents files
+- Confirm log_interval parameter in model.learn() is not None (should be 1 or higher)
+- Check TensorBoard is pointing to correct directory (parent of run directories)
 
 
 ================================================================================

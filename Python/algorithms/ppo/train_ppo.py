@@ -353,7 +353,7 @@ def main():
             model.learn(
                 total_timesteps=PPOConfig.TOTAL_TIMESTEPS,
                 callback=callbacks,
-                log_interval=None,  # We handle logging via callbacks
+                log_interval=1,     # Log to TensorBoard every update (required for TB logging)
                 progress_bar=False  # We use Rich instead
             )
     

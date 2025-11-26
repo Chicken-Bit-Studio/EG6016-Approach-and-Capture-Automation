@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2733b963de490e04c8eef2e7ab86dcda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  thrusterPower: 100
-  thrusterISP: 300
+  thrusterPower: 5
+  thrusterISP: 210
   input: 0
   input_manual: 0
   input_manual_isUpdated: 0
