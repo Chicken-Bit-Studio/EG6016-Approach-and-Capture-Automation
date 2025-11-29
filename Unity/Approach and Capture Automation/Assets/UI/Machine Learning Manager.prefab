@@ -65,23 +65,38 @@ MonoBehaviour:
           actuatorCount: 0
         thrusters:
           thrusterCount: 0
-    targetGameObject: {fileID: 0}
+    targetGameObjectInScene: {fileID: 0}
+    targetGameObjectPrefab: {fileID: 4364111030250680152, guid: 0609293440ea53e4facbed7a04efbcac, type: 3}
     targetRigidbody: {fileID: 0}
     targetCollider: {fileID: 0}
-    satelliteStartingPosition: {x: -0.86443335, y: -0.013460532, z: 0.5025673}
-    satelliteStartingRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-    targetStartingPosition: {x: 0, y: 0, z: 6.48}
-    targetStartingRotation: {x: 0.10483404, y: -0.22177814, z: 0.41430008, w: -0.8764586}
+    satelliteStartingPosition: {x: 0, y: 0, z: 0}
+    satelliteStartingRotation: {x: 0, y: 0, z: 0, w: 0}
+    targetStartingPosition: {x: 0, y: 0, z: 0}
+    targetStartingRotation: {x: 0, y: 0, z: 0, w: 0}
   episodeSettings:
     maxEpisodeTime: 60
-    elapsedTime: 0
-    episodeDone: 0
-    episodeReward: 0
+    reportOnEpisodeEnd: 0
   episodeRandomisation:
     maximumPositionalOffset: 1
-    maximumStartingSpeed: 0.3
+    maximumStartingSpeed: 0.5
     maximumAngularOffset: 20
     maximumAngularSpeed: 15
+  curriculumTracking:
+    curriculumRunning: 0
+    totalRealTime_raw: 0
+    totalSimulatedTime_raw: 0
+    episodeRealTime_raw: 0
+    episodeSimulatedTime_raw: 0
+    totalRealTime: 00:00.000
+    totalSimulatedTime: 00:00.000
+    effectiveTimeScale: 1
+    episodeNumber: 1
+    episodeRealTime: 00:00.000
+    episodeSimulatedTime: 00:00.000
+    episodeFrames: 0
+    episodeSteps: 0
+    episodeReward: 0
+    episodeDone: 0
 --- !u!114 &1606530120647406648
 MonoBehaviour:
   m_ObjectHideFlags: 0

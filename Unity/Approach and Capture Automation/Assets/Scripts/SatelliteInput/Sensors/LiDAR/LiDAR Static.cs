@@ -124,11 +124,13 @@ public static class LiDARStatic
                     for (int r = 0; r < rootOfArraySize; r++)
                     {
                         // Precompute vertical angle
-                        float vAngle = startDeg + r * stepDeg;
+                        // Note: v_ and h_ angles have been inverted. An issue was experienced where the sensor's relative view was inverted 
+                        //  in both axes due to Unity taking positive rotations to be clockwise.
+                        float vAngle = -(startDeg + r * stepDeg);
                         for (int c = 0; c < rootOfArraySize; c++)
                         {
                             // Precompute horizontal angle
-                            float hAngle = startDeg + c * stepDeg;
+                            float hAngle = -(startDeg + c * stepDeg);
                             // Compute direction vector
                             Vector3 dirVec = (Quaternion.Euler(vAngle, 0f, hAngle) * Vector3.up).normalized;
                             bw.Write(dirVec.x);
@@ -140,7 +142,7 @@ public static class LiDARStatic
                 // End the process and report success to console with file path and size
                 stopwatch.Stop();
                 Debug.Log($"LiDAR direction .bin written for \"{LiDARDirectionsBinaryFileUtilities.GenerateLiDARRayDirectionBinaryPath(enumFOV, enumRayDensity, true)}\"" +
-                    $" in: {FormatStopwatchDuration(stopwatch)}\n(vectors: {rayCount}, approx {rayCount * 12f / 1048576f:F3}MB)");
+                    $" in: {FormatDuration(stopwatch)}\n(vectors: {rayCount}, approx {rayCount * 12f / 1048576f:F3}MB)");
             }
             // Catch any exceptions and report failure to console. The workflow can continue for other parameter combinations.
             catch (Exception ex)
@@ -435,8 +437,13 @@ public static class LiDARStatic
                 ushort value16 = 0;
                 if (hit.collider != null)
                 {
-                    float pseudoValue = 1 - hit.distance / mono.sensorParameters.maxDistance; // 0.0 to 1.0
-                    value16 = (ushort)(DecodeMappingCurve(mono.imageParameters.mappingCurve)(pseudoValue, mono.imageParameters.a) * 65535f);
+                    //float pseudoValue = 1 - hit.distance / mono.sensorParameters.maxDistance; // 0.0 to 1.0
+                    //value16 = (ushort)(DecodeMappingCurve(mono.imageParameters.mappingCurve)(pseudoValue, mono.imageParameters.a) * 65535f);
+                    // or...
+                    // Simple inverse mapping: closer = brighter
+                    float normalizedDist = math.clamp(hit.distance / mono.sensorParameters.maxDistance, 0f, 1f);
+                    value16 = (ushort)((1f - normalizedDist) * 65535f);
+                    // this was instantly better. TODO: implement this and/or remove the DecodeMappingCurve methodology.
                 }
                 // Remember the expected byte buffer in 16-bit format uses two bytes per pixel so the buffer size is twice as large as the pixel conut. "little-endian" order: low byte then high byte.
                 int i2 = i * 2;
@@ -454,8 +461,8 @@ public static class LiDARStatic
             var mono = monoBehaviourInstance;
 
             // Size, create, and assign an empty Texture2D object
-            int newImgSize = math.clamp(mono.nativeArrays.rootOfArraySize, 4, 512);
-            //Debug.LogWarning($"Regenerating Texture2D with image size {newImgSize}x{newImgSize}\nnativeArrays.rootOfArraySize: {mono.nativeArrays.rootOfArraySize}");
+            int newImgSize = math.clamp(mono.nativeArrays.rootOfArraySize, 4, DecodeImageResolution(monoBehaviourInstance.imageParameters.maxResolution));
+            //Debug.Log($"Regenerating Texture2D with image size {newImgSize}x{newImgSize}\nnativeArrays.rootOfArraySize: {mono.nativeArrays.rootOfArraySize}");
             mono.imageParameters.lidarTexture = new Texture2D(
                 width: newImgSize,
                 height: newImgSize,

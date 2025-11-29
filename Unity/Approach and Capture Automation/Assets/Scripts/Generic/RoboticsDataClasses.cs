@@ -541,9 +541,9 @@ public static class RoboticsDataClasses
                     {
                         string arrStr = "";
                         int index = 0;
-                        arrStr += $"Actuators ({modelInterface.plants.actuators.actuatorCount}):\t";
+                        arrStr += $"Actuators ({modelInterface.plants.actuators.actuatorCount}):\t\t";
                         for (int i = 0; i < modelInterface.plants.actuators.actuatorCount; i++) { arrStr += receivedFloats[index] + ", "; index++; }
-                        arrStr += $"\nThrusters ({modelInterface.plants.thrusters.thrusterCount}):\t";
+                        arrStr += $"\nThrusters ({modelInterface.plants.thrusters.thrusterCount}):\t\t\t";
                         for (int i = 0; i < modelInterface.plants.thrusters.thrusterCount; i++) { arrStr += receivedFloats[index] + ", "; index++; }
                         arrStr += $"\nTotal ({index})" +
                             ((index == modelInterface.plants.actuators.actuatorCount + modelInterface.plants.thrusters.thrusterCount) ? "" :

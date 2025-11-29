@@ -1,33 +1,57 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Reflection;
-using System.Text;
 
 public static class StaticUtilities
 {
-    public static string FormatStopwatchDuration(Stopwatch stopwatch)
+    // Formats a duration given either a Stopwatch or a float number of seconds
+    public static string FormatDuration(Stopwatch stopwatch)
     {
         // Don't attempt to format a null stopwatch, that would be silly
-        if (stopwatch == null)
+        if (stopwatch == null) { return "(no stopwatch)"; }
+        // Use the helper class to format the duration
+        return Helpers.FormatDuration_Internal(stopwatch.Elapsed);
+    }
+    public static string FormatDuration(float seconds)
+    {
+        // Use the helper class to format the duration
+        return Helpers.FormatDuration_Internal(TimeSpan.FromSeconds(seconds));
+    }
+
+    // Dumps an array into a .csv file in the local machine's temporary directory
+    public static void WriteFloatArrayToTempCsv(
+        float[] values,
+        int rowWidth,
+        string fileName)
+    {
+        string tempPath = Path.GetTempPath();
+        string fullPath = Path.Combine(tempPath, fileName + ".csv");
+
+        using (var writer = new StreamWriter(fullPath))
         {
-            return "(no stopwatch)";
+            for (int i = 0; i < values.Length; i++)
+            {
+                // Write value
+                writer.Write(values[i].ToString(CultureInfo.InvariantCulture));
+
+                bool endOfRow = (i + 1) % rowWidth == 0;
+                bool lastValue = i == values.Length - 1;
+
+                if (!lastValue)
+                {
+                    if (endOfRow)
+                        writer.Write('\n');   // row break
+                    else
+                        writer.Write(',');    // same row
+                }
+            }
         }
 
-        TimeSpan t = stopwatch.Elapsed;
-        StringBuilder sb = new StringBuilder(); // On review, I have decided that I don't like StringBuilder.
-
-        if (t.Hours > 0)
-            sb.Append($"{t.Hours}h ");
-        if (t.Minutes > 0)
-            sb.Append($"{t.Minutes}m ");
-        if (t.Seconds > 0)
-            sb.Append($"{t.Seconds}s ");
-        if (t.Milliseconds > 0 || sb.Length == 0) // Always show ms if nothing else
-            sb.Append($"{t.Milliseconds}ms");
-
-        // Trim trailing space if any and return
-        return sb.ToString().TrimEnd();
+        // Report completion
+        UnityEngine.Debug.Log($"LiDAR hitDistances dump generated with {values.Length} elements at: {fullPath}");
     }
     // Returns an array containing the collective field data for all leaf classes in the given nested class structures.
     public static Type[] GetClassTreeLeafTypes(Type[] roots)
@@ -58,6 +82,8 @@ public static class StaticUtilities
         // Return the temporary list as an array
         return leafFields.ToArray();
     }
+
+    // Converts an array to a string for debugging purposes
     public static string Arr_Str(Array arr)
     {
         // You're not a real programmer if you need to see this function commented
@@ -67,5 +93,31 @@ public static class StaticUtilities
             t += i.ToString() + "\n";
         }
         return t;
+    }
+
+    // Helper class to encapsulate internal methods
+    private class Helpers
+    {
+        public static string FormatDuration_Internal(TimeSpan t)
+        {
+            int days = t.Days;
+            int hours = t.Hours;
+            int minutes = t.Minutes;
+            int secs = t.Seconds;
+            int ms = t.Milliseconds;
+
+            if (days > 0)
+            {
+                return $"{days}d {hours:D2}:{minutes:D2}:{secs:D2}.{ms:D3}";
+            }
+            else if (hours > 0)
+            {
+                return $"{hours:D2}:{minutes:D2}:{secs:D2}.{ms:D3}";
+            }
+            else
+            {
+                return $"{minutes:D2}:{secs:D2}.{ms:D3}";
+            }
+        }
     }
 }

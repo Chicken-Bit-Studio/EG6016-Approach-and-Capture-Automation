@@ -71,7 +71,7 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public float a = 0.4f;
         [Tooltip("The maximum resolution of the output image. If the LiDAR point cloud data array has a smaller size than this value the resulting image will be smaller.")]
         public LiDARImageGeneration.ImageResolution maxResolution = LiDARImageGeneration.ImageResolution.Size512x512;
-        [Tooltip("The refresh rate of the LiDAR image in Hz.")]
+        [Tooltip("The refresh rate of the LiDAR image in Hz. Works on in-game time.")]
         [Range(1f, 30f)]
         public float maxRefreshRate = 8f;
         [HideInInspector]
@@ -209,8 +209,8 @@ public class LiDARMonoBehaviour : MonoBehaviour
 
     private IEnumerator PerformLiDARScan()
     {
-        // Ensure the LiDAR image isn't updating too rapidly
-        float secondsSinceImageUpdate = 0f;
+        // Ensure the LiDAR image isn't updating too rapidly, but do update it at scene start
+        float physicsSecondsSinceImageUpdate = float.MaxValue;
 
         // Note: Almost all logic and data management has been optimised and offloaded to a static script. See LiDARStatic.
         while (true)
@@ -223,11 +223,11 @@ public class LiDARMonoBehaviour : MonoBehaviour
             // Proceed to use the raycast hit data at nativeArrays.raycastHits
             if (imageParameters.generateLiDARImage)
             {
-                secondsSinceImageUpdate += Time.deltaTime;
-                if (secondsSinceImageUpdate >= imageParameters.imageRefreshPeriod)
+                physicsSecondsSinceImageUpdate += Time.fixedDeltaTime;
+                if (physicsSecondsSinceImageUpdate >= imageParameters.imageRefreshPeriod)
                 {
                     LiDARImageGeneration.UpdateLiDARImage(monoBehaviourInstance: this);
-                    secondsSinceImageUpdate = 0;
+                    physicsSecondsSinceImageUpdate = 0;
                 }
             }
         }

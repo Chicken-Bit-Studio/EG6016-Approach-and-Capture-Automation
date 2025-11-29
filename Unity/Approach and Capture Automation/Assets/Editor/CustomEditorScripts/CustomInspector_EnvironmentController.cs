@@ -47,5 +47,11 @@ public class CustomInspector_EnvironmentController : Editor
         {
             script.ResetEnvironment();
         }
+        
+        // Reset episode (no randomisation) button
+        if (GUILayout.Button(new GUIContent("Manual Episode Reset (Unrandomised)", "Ends the current episode and instigates a new one. Skips initital scene randomisation.")))
+        {
+            script.ResetEnvironment(skipRandomisation: true);
+        }
     }
 }
