@@ -180,6 +180,7 @@ public class EnvironmentController : MonoBehaviour
         [HideInInspector] public float totalSimulatedTime_raw = 0f;
         [HideInInspector] public float episodeRealTime_raw = 0f;
         [HideInInspector] public float episodeSimulatedTime_raw = 0f;
+        [HideInInspector] public CircularBuffer<ReinforcementLearning.ApproachAndCaptureProject.Actions> actionBuffer = new(2);
         private int stepsSinceTimeScaleSample = 0;
 
         [Header("Curriculum Tracking")]
@@ -343,7 +344,7 @@ public class EnvironmentController : MonoBehaviour
         if (curriculumTracking.episodeDone) { return (new float[1], 0f, true); }   // TODO: use calculated length
         // Increment the episode clock by one unit of deltaTime
         curriculumTracking.AcknowledgeTimestep(PhysicsControl.PHYSICS_TIMESTEP);
-        // Apply actions to satellite
+        // Apply actions to satellite and record them to the buffer
         ApplyAction(action, isDebugStep);
         // Advance physics by one 'step' (time-domain)
         physicsControl.StepPhysics(PhysicsControl.PHYSICS_TIMESTEP);
@@ -375,11 +376,15 @@ public class EnvironmentController : MonoBehaviour
     /// </summary>
     private void ApplyAction(float[] action, bool debuggingMode = false)
     {
-        // Create and apply the provided actions array with the struct found in RoboticsDataClasses.ReinforcementLearning.ApproachAndCaptureProject.Actions
-        new ReinforcementLearning.ApproachAndCaptureProject.Actions(
-            modelInterface: references.satelliteModelInterface,
+        // Create a RoboticsDataClasses.ReinforcementLearning.ApproachAndCaptureProject.Actions object with the provided actions array
+        var a = new ReinforcementLearning.ApproachAndCaptureProject.Actions(
+            modelInterface: ref references.satelliteModelInterface,
             receivedFloats: action
-        ).AffectModel(debuggingMode: debuggingMode);
+        );
+        // Add this struct to the actions buffer
+        curriculumTracking.actionBuffer.Add(a);
+        // Apply the actions to the model
+        a.AffectModel(debuggingMode: debuggingMode);
     }
 
     /// <summary>
@@ -389,7 +394,7 @@ public class EnvironmentController : MonoBehaviour
     {
         // TODO: track this workflow back - it's not the most efficient wrt .ToArray() calls.
         return new ReinforcementLearning.ApproachAndCaptureProject.Observations(
-            modelInterface: references.satelliteModelInterface,
+            modelInterface: ref references.satelliteModelInterface,
             satellite: references.satelliteGameObjectInScene.transform,
             satelliteRb: references.satelliteRigidbody,
             target: references.targetGameObjectInScene.transform,
@@ -405,6 +410,8 @@ public class EnvironmentController : MonoBehaviour
     private float ComputeReward()
     {
         return new ReinforcementLearning.ApproachAndCaptureProject.Rewards(
+            modelInterface: ref references.satelliteModelInterface,
+            actionHistory: curriculumTracking.actionBuffer,
             satTransform: references.satelliteGameObjectInScene.transform,
             satRigidbody: references.satelliteRigidbody,
             tarTransform: references.targetGameObjectInScene.transform,

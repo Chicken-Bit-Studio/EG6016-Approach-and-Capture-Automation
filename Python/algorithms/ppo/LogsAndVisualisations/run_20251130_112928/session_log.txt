@@ -1,3 +1,0 @@
-2025-11-30 11:29:28 [INFO] Logging initialized for ppo - Run ID: run_20251130_112928
-2025-11-30 11:29:28 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251130_112928\session_log.txt
-2025-11-30 11:30:16 [ERROR] Failed to connect to Unity: Failed to connect to Unity at 127.0.0.1:5005 after 5 attempts

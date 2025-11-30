@@ -68,18 +68,17 @@ MonoBehaviour:
     targetGameObjectInScene: {fileID: 0}
     targetGameObjectPrefab: {fileID: 4364111030250680152, guid: 0609293440ea53e4facbed7a04efbcac, type: 3}
     targetRigidbody: {fileID: 0}
-    targetCollider: {fileID: 0}
     satelliteStartingPosition: {x: 0, y: 0, z: 0}
     satelliteStartingRotation: {x: 0, y: 0, z: 0, w: 0}
     targetStartingPosition: {x: 0, y: 0, z: 0}
     targetStartingRotation: {x: 0, y: 0, z: 0, w: 0}
   episodeSettings:
-    maxEpisodeTime: 60
+    maxEpisodeTime: 90
     reportOnEpisodeEnd: 0
   episodeRandomisation:
     maximumPositionalOffset: 1
-    maximumStartingSpeed: 0.5
-    maximumAngularOffset: 20
+    maximumStartingSpeed: 1
+    maximumAngularOffset: 45
     maximumAngularSpeed: 15
   curriculumTracking:
     curriculumRunning: 0
