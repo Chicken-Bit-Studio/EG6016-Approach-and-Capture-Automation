@@ -77,7 +77,7 @@ public class GripperPadMonoBehaviour : MonoBehaviour
 
     void OnCollisionExit(Collision collision)
     {
-        if (collision.collider == environmentController.references.targetCollider)
+        if (collision.collider.transform.root == environmentController.references.targetGameObjectInScene)
         {
             ResetContactState();
         }
@@ -117,7 +117,7 @@ public class GripperPadMonoBehaviour : MonoBehaviour
         else { lastContactForce = summedImpulseMagnitude; }
 
         // Pad to target distance (closest point)
-        Vector3 closest = environmentController.references.targetCollider.ClosestPoint(transform.position); // point on target surface closest to pad pivot
+        Vector3 closest = collision.collider.ClosestPoint(transform.position); // point on target surface closest to pad pivot
         float padToSurface = Vector3.Distance(transform.position, closest);
         lastPadToTargetDistance = padToSurface;
         // Estimate depth: if pad is overlapping target collider ClosestPoint returns a point on surface and distance may be small;

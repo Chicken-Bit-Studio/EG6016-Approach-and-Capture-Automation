@@ -76,7 +76,7 @@ def launch_tensorboard(log_dir: str, port: int = None) -> Optional[subprocess.Po
         
         process = subprocess.Popen(
             ["tensorboard", "--logdir", log_dir, "--port", str(port)],
-            creationflags=subprocess.CREATE_NEW_CONSOLE,  # Windows: separate console window
+            creationflags=subprocess.CREATE_NO_WINDOW,  # Windows: don't open a console window
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )

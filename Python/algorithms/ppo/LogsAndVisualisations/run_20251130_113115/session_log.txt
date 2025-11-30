@@ -1,0 +1,2 @@
+2025-11-30 11:31:15 [INFO] Logging initialized for ppo - Run ID: run_20251130_113115
+2025-11-30 11:31:15 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251130_113115\session_log.txt

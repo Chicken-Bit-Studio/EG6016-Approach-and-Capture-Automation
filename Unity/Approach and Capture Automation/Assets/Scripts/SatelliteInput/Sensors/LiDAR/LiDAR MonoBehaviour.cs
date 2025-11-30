@@ -185,6 +185,9 @@ public class LiDARMonoBehaviour : MonoBehaviour
             layerMask = ~((1 << LayerMask.NameToLayer("Ignore Raycast")) | (1 << LayerMask.NameToLayer("Gripper Arm Elements"))),
             hitBackfaces = false
         };
+        // Set generateLiDARImage according to MLEfficiency (if one is present in the scene)
+        var eff = FindObjectOfType<MLEfficiency>();
+        if (eff != null) { imageParameters.generateLiDARImage = eff.rendering.doRendering; }
         // Start LiDAR scanning coroutine
         liDARScanCoroutine = StartCoroutine(PerformLiDARScan());
     }

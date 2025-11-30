@@ -318,7 +318,7 @@ public class UnityMLServer : MonoBehaviour
             writer.Write(actLen);
             writer.Flush();
 
-            Debug.Log($"[UnityMLServer] Handshake sent: obs={obsLen}, act={actLen}");
+            //Debug.Log($"[UnityMLServer] Handshake sent: obs={obsLen}, act={actLen}");
         }
         catch (Exception ex)
         {

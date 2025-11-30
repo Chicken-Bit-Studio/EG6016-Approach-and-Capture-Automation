@@ -35,7 +35,7 @@ public class EnvironmentController : MonoBehaviour
         public GameObject targetGameObjectInScene;
         public GameObject targetGameObjectPrefab;
         [ReadOnly] public Rigidbody targetRigidbody;
-        [ReadOnly] public Collider targetCollider;
+        //[ReadOnly] public Collider targetCollider;
 
         // Manual start procedure. Cannot be called inside a constructor because Unity objects are not yet initialised then.
         public void Start_Manual()
@@ -61,7 +61,7 @@ public class EnvironmentController : MonoBehaviour
             if (satelliteGameObjectInScene == null || targetGameObjectInScene == null) { throw new NullReferenceException("Assign satellite and target gameobjects first!"); }
             satelliteRigidbody = satelliteGameObjectInScene.GetComponent<Rigidbody>();
             targetRigidbody = targetGameObjectInScene.GetComponent<Rigidbody>();
-            targetCollider = targetGameObjectInScene.GetComponent<Collider>();
+            //targetCollider = targetGameObjectInScene.GetComponent<Collider>();
         }
 
         // Cached initial transform data

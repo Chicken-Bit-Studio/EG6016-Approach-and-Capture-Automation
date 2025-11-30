@@ -15,6 +15,7 @@ public class MLEfficiency : MonoBehaviour
         public RenderTexture cameraTargetTexture;
         public Texture2D replacementTexture;
         public RawImage[] pausedOverlays;
+        public bool doRendering = true;
         private Camera camera;
 
         public void Start_Manual()
@@ -23,8 +24,10 @@ public class MLEfficiency : MonoBehaviour
             renderingToggle.isOn = camera.enabled;
             renderingToggle.onValueChanged.AddListener(OnRenderingToggle);
         }
-        public void OnRenderingToggle(bool doRendering)
+        public void OnRenderingToggle(bool newDoRendering)
         {
+            doRendering = newDoRendering;
+
             camera.enabled = doRendering;
             cameraScreenSpace.texture = doRendering ? cameraTargetTexture : replacementTexture;
 

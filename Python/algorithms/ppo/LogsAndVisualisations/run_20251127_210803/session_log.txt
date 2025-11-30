@@ -1,7 +1,0 @@
-2025-11-27 21:08:03 [INFO] Logging initialized for ppo - Run ID: run_20251127_210803
-2025-11-27 21:08:03 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251127_210803\session_log.txt
-2025-11-27 21:08:10 [INFO] Configuring PPO model
-2025-11-27 21:08:22 [INFO] Beginning training for 1,000,000 timesteps
-2025-11-27 21:11:19 [WARNING] Training interrupted by user (Ctrl+C)
-2025-11-27 21:11:19 [INFO] Final model saved: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251127_210803\final_model.zip
-2025-11-27 21:11:19 [INFO] Training session complete. Duration: 00h 03m 16s

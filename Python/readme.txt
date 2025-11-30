@@ -215,37 +215,125 @@ Modifying Configuration:
 
 
 ================================================================================
-7. USING TRAINED MODELS
+7. DEPLOYING TRAINED MODELS
 ================================================================================
 
-Loading a Trained Model:
--------------------------
+Running Trained Models in Unity:
+---------------------------------
 
-from stable_baselines3 import PPO
+After training, you can deploy your models to watch them perform in real-time.
+The deployment script provides a simple interface for loading and running any
+trained model.
 
-# Load model
-model = PPO.load("Python/algorithms/ppo/best_model/best_model.zip")
+Quick Start:
+------------
+1. Ensure Unity is running (press Play)
+2. Navigate to Python/ directory
+3. Activate virtual environment: venv\Scripts\activate
+4. Run deployment script: python deploy/run_model.py
+5. Select model file in GUI popup
+6. Watch agent perform in Unity
+7. Press Ctrl+C to stop
 
-# Use model for prediction
-obs = env.reset()
-action, _states = model.predict(obs, deterministic=True)
+Command-Line Usage:
+-------------------
 
-Model Locations:
-----------------
-- Best overall: Python/algorithms/ppo/best_model/best_model.zip
-- Final from run: Python/algorithms/ppo/LogsAndVisualisations/run_*/final_model.zip
-- Checkpoints: Python/algorithms/ppo/LogsAndVisualisations/run_*/checkpoint_step_*.zip
+# GUI file picker (default)
+python deploy/run_model.py
 
-Model Information:
+# Specify model directly
+python deploy/run_model.py --model algorithms/ppo/best_model/best_model.zip
+
+# Run fixed number of episodes
+python deploy/run_model.py --episodes 10
+
+# Use stochastic actions (more exploratory)
+python deploy/run_model.py --stochastic
+
+# Combined options
+python deploy/run_model.py --model path/to/model.zip --episodes 5 --stochastic
+
+Deployment Output:
 ------------------
-Best model metadata is stored in:
-    Python/algorithms/ppo/best_model/best_model_info.txt
+The script displays:
+- Model information and metadata
+- Episode-by-episode statistics (steps, reward, outcome)
+- Summary statistics on completion:
+  - Episodes completed
+  - Average reward ± standard deviation
+  - Average episode length
+  - Success rate
+  - Total duration
 
-This file contains:
-- Run ID that produced the best model
-- Timesteps at which it was saved
-- Performance metrics (mean reward, episodes, etc.)
-- Hyperparameters used
+Example output:
+    Episode 3:
+      Steps: 1180
+      Reward: 350.1
+      Outcome: Terminated
+      Duration: 23.6s
+
+    ========================================================================
+    Deployment Summary
+    ========================================================================
+    Episodes completed: 10
+    Average reward: 345.3 ± 12.5
+    Average steps: 1215.4
+    Success rate: 70.0%
+    Total duration: 00h 03m 54s
+
+Action Modes:
+-------------
+Deterministic (default):
+  - Agent always selects most likely action
+  - Consistent, repeatable behavior
+  - Best for demonstration and evaluation
+  - Use: python deploy/run_model.py
+
+Stochastic:
+  - Agent samples from action probability distribution
+  - More varied, exploratory behavior
+  - Useful for testing robustness
+  - Use: python deploy/run_model.py --stochastic
+
+Model Compatibility:
+--------------------
+The deployment script:
+- Automatically detects algorithm type (PPO, A2C, SAC, etc.)
+- Validates observation/action space compatibility
+- Displays model metadata if available (best_model_info.txt)
+- Shows training hyperparameters for reference
+- Warns about space mismatches before deployment
+
+Supported Models:
+-----------------
+- Best model: algorithms/ppo/best_model/best_model.zip
+- Final model from any run: LogsAndVisualisations/run_*/final_model.zip
+- Checkpoints: LogsAndVisualisations/run_*/checkpoint_step_*.zip
+- Any .zip model file trained with Stable-Baselines3
+
+Stopping Deployment:
+--------------------
+Press Ctrl+C at any time to gracefully stop deployment.
+The script will:
+- Complete the current episode
+- Display summary statistics
+- Close Unity connection cleanly
+
+Troubleshooting Deployment:
+----------------------------
+Problem: "Cannot connect to Unity"
+- Ensure Unity is running and in Play mode
+- Verify UnityMLServer is active on port 5005
+
+Problem: "Space mismatch detected"
+- Model was trained with different observation/action dimensions
+- Environment may have changed since training
+- Deployment will likely fail - retrain model
+
+Problem: "Could not load model"
+- File may be corrupted
+- Unsupported algorithm (currently supports PPO, A2C, SAC, TD3, DQN)
+- Try loading different model file
 
 
 ================================================================================
