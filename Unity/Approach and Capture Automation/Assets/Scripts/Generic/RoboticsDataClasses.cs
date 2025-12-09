@@ -469,7 +469,7 @@ public static class RoboticsDataClasses
                     list.Add(fuelTankData);
                     AddArrayValuesToList(actuatorData);
                     AddArrayValuesToList(gripperPadData);
-                    AddArrayValuesToList(lidarData);
+                    //AddArrayValuesToList(lidarData);
 
                     return list.ToArray();
 

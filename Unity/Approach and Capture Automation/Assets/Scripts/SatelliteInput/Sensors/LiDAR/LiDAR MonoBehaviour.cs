@@ -64,11 +64,13 @@ public class LiDARMonoBehaviour : MonoBehaviour
         public bool generateLiDARImage = true;
         [Tooltip("The UnityEngine.UI.Image component the generated image feeds to.")]
         public RawImage lidarUIImage;
-        [Tooltip("The colour mapping curve used to translate between distance and pixel colour.")]
-        public LiDARImageGeneration.MappingCurve mappingCurve = LiDARImageGeneration.MappingCurve.Exponential;
-        [Tooltip("A variable used in the colour curve calculations.")]
-        [Range(0.05f, 8)]
-        public float a = 0.4f;
+        //[Tooltip("The colour mapping curve used to translate between distance and pixel colour.")]
+        //public LiDARImageGeneration.MappingCurve mappingCurve = LiDARImageGeneration.MappingCurve.Exponential;
+        //[Tooltip("A variable used in the colour curve calculations.")]
+        //[Range(0.05f, 8)]
+        //public float a = 0.4f;
+        [Range(0.05f, 0.5f)]
+        public float maximumPixelBrightness = 0.3f;
         [Tooltip("The maximum resolution of the output image. If the LiDAR point cloud data array has a smaller size than this value the resulting image will be smaller.")]
         public LiDARImageGeneration.ImageResolution maxResolution = LiDARImageGeneration.ImageResolution.Size512x512;
         [Tooltip("The refresh rate of the LiDAR image in Hz. Works on in-game time.")]
@@ -110,7 +112,7 @@ public class LiDARMonoBehaviour : MonoBehaviour
     public class DebuggingSettings
     {
         [Header("Debugging Tools")]
-        [Tooltip("Draw every 283rd ray for debugging purposes.")]
+        [Tooltip("Draw every 569th ray for debugging purposes.")]
         public bool drawRays = false;
     }
 

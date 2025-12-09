@@ -1,0 +1,67 @@
+2025-12-01 21:09:57 [INFO] Logging initialized for ppo - Run ID: run_20251201_210957
+2025-12-01 21:09:57 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251201_210957\session_log.txt
+2025-12-01 21:10:03 [INFO] Configuring PPO model
+2025-12-01 21:10:20 [INFO] Beginning training for 1,000,000 timesteps
+2025-12-01 21:30:28 [ERROR] Connection lost during training: Connection lost during reset: timed out
+Traceback (most recent call last):
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 234, in send_action
+    resp_len = struct.unpack("<i", self._recvall(4))[0]
+                                   ^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 267, in _recvall
+    packet = self.sock.recv(num_bytes - len(data))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_env_wrapper.py", line 150, in step
+    obs, reward, done = self.client.send_action(action)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 249, in send_action
+    raise ConnectionError(f"Connection lost during step: {e}")
+ConnectionError: Connection lost during step: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 192, in send_reset
+    _ = self._recvall(4)
+        ^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 267, in _recvall
+    packet = self.sock.recv(num_bytes - len(data))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TimeoutError: timed out
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\train_ppo.py", line 355, in main
+    model.learn(
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\ppo\ppo.py", line 311, in learn
+    return super().learn(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 324, in learn
+    continue_training = self.collect_rollouts(self.env, callback, self.rollout_buffer, n_rollout_steps=self.n_steps)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\common\on_policy_algorithm.py", line 218, in collect_rollouts
+    new_obs, rewards, dones, infos = env.step(clipped_actions)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\common\vec_env\base_vec_env.py", line 222, in step
+    return self.step_wait()
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\common\vec_env\dummy_vec_env.py", line 59, in step_wait
+    obs, self.buf_rews[env_idx], terminated, truncated, self.buf_infos[env_idx] = self.envs[env_idx].step(  # type: ignore[assignment]
+                                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\common\monitor.py", line 94, in step
+    observation, reward, terminated, truncated, info = self.env.step(action)
+                                                       ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_env_wrapper.py", line 158, in step
+    self.reset()
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_env_wrapper.py", line 116, in reset
+    self.client.send_reset(seed)
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 198, in send_reset
+    raise ConnectionError(f"Connection lost during reset: {e}")
+ConnectionError: Connection lost during reset: timed out
+2025-12-01 21:30:29 [INFO] Final model saved: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251201_210957\final_model.zip
+2025-12-01 21:30:29 [INFO] Training session complete. Duration: 00h 20m 32s

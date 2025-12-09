@@ -344,6 +344,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Main_UI
       objectReference: {fileID: 0}
+    - target: {fileID: 4875550959352141249, guid: 59ed4e32b8ff6284d897bd175043fae1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -484,6 +488,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Main Camera
       objectReference: {fileID: 0}
+    - target: {fileID: 5486756690291682686, guid: 31c6600b81a69e345b381278cef1d18a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8322176571580268157, guid: 31c6600b81a69e345b381278cef1d18a, type: 3}
       propertyPath: m_LocalPosition.x
       value: -17.7
@@ -524,6 +532,10 @@ PrefabInstance:
     - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: references.targetGameObject
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
+      propertyPath: episodeSettings.maxEpisodeTime
+      value: 120
       objectReference: {fileID: 0}
     - target: {fileID: 4035324185815343394, guid: 2cabd451421f6b947a6997256dab02e1, type: 3}
       propertyPath: references.satelliteGameObject

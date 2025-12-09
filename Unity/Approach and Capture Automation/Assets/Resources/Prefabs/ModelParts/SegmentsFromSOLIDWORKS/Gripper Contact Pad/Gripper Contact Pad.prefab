@@ -147,3 +147,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c08cc99898372a49bb1560eda507d10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxContactForce: 200
+  contactProbeRadius: 0.05
+  maxRelativeVelocity: 2
+  maxPadTargetDistance: 2

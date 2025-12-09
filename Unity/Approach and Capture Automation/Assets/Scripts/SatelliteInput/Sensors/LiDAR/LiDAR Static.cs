@@ -331,7 +331,7 @@ public static class LiDARStatic
                 buildRaycastCommandsJob_jobHandle.Complete();
                 for (int i = 0; i < mono.nativeArrays.totalRayCount; i++)
                 {
-                    if (i % 283 == 0)
+                    if (i % 569 == 0)
                     {
                         Debug.DrawRay(
                             mono.sensorParameters.emitter.position,
@@ -427,6 +427,21 @@ public static class LiDARStatic
             // If the mono behaviour's output texture is undefined, generate it
             if (mono.imageParameters.lidarTexture == null) { RegenerateLiDARImage(mono); }
 
+            // (T) Find the nearest and furthest hits
+            float nearest = float.PositiveInfinity;
+            float farthest = float.NegativeInfinity;
+            float distDiff;
+            for (int i = 0; i < mono.imageParameters.lidarTexturePixelCount; i++)
+            {
+                RaycastHit thisHit = mono.nativeArrays.raycastHits[mono.imageParameters.lidarTextureMappedIndexes[i]];
+                if (thisHit.collider != null)
+                {
+                    if (thisHit.distance < nearest) { nearest = thisHit.distance; }
+                    if (thisHit.distance > farthest) { farthest = thisHit.distance; }
+                }
+            }
+            distDiff = farthest - nearest;
+
             // Loop through each pixel in the monobehaviour's LiDAR output texture
             for (int i = 0; i < mono.imageParameters.lidarTexturePixelCount; i++)
             {
@@ -441,9 +456,16 @@ public static class LiDARStatic
                     //value16 = (ushort)(DecodeMappingCurve(mono.imageParameters.mappingCurve)(pseudoValue, mono.imageParameters.a) * 65535f);
                     // or...
                     // Simple inverse mapping: closer = brighter
-                    float normalizedDist = math.clamp(hit.distance / mono.sensorParameters.maxDistance, 0f, 1f);
-                    value16 = (ushort)((1f - normalizedDist) * 65535f);
+                    //float normalizedDist = math.clamp(hit.distance / mono.sensorParameters.maxDistance, 0f, 1f);
+                    //value16 = (ushort)((1f - normalizedDist) * 65535f);
                     // this was instantly better. TODO: implement this and/or remove the DecodeMappingCurve methodology.
+                    float ratio1 = (farthest - hit.distance) / distDiff;
+                    //float ratio2 = (ratio1)/(mono.imageParameters.maximumPixelBrightness-0.02f); - cool
+                    //float ratio2 = Mathf.Exp(Mathf.Log(0.02f) + ratio1 * (Mathf.Log(mono.imageParameters.maximumPixelBrightness) - Mathf.Log(0.02f)));
+                    float ratio2 = Mathf.Pow(0.02f, 1 - ratio1) * Mathf.Pow(mono.imageParameters.maximumPixelBrightness, ratio1);
+                    //value16 = (ushort)((Math.Log10(ratio1)) * 65535f);
+                    value16 = (ushort)(ratio2 * 65535f);
+
                 }
                 // Remember the expected byte buffer in 16-bit format uses two bytes per pixel so the buffer size is twice as large as the pixel conut. "little-endian" order: low byte then high byte.
                 int i2 = i * 2;
