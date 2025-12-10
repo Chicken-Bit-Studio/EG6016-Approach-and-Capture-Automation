@@ -151,16 +151,16 @@ public class GripperPadMonoBehaviour : MonoBehaviour
     {
         // Return structure:
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Index:   Quantity:                           Range:                  Note:
+        // Index:   Quantity:                                   Range:                  Note:
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        // [0]      Contact flag                        x = 0.0 | x = 1.0       Boolean for "is the pad touching the target?"
-        // [1]      Contact normal x                    -1.0 <= x <= 1.0        } Direction of pad’s contact force, expressed in pad local frame
-        // [2]      Contact normal y                    -1.0 <= x <= 1.0        }
-        // [3]      Contact normal z                    -1.0 <= x <= 1.0        }
-        // [4]      Contact force magnitude normalised  0.0  <= x <= 1.0        Gives grip strength cue
-        // [5]      Contact depth                       0.0  <= x <= 1.0        How deep the contact is (normalized)
-        // [6]      Relative velocity along normal      -1.0 <= x <= 1.0        How fast the pad is sliding/compressing (helps with stick vs slip)
-        // [7]      Pad position relative to target     0.0  <= x <= 1.0        Distance of pad center to target surface (if no contact yet)
+        // [0]      Contact flag                                x = 0.0 | x = 1.0       Boolean for "is the pad touching the target?"
+        // [1]      Contact normal x                            -1.0 <= x <= 1.0        } Direction of pad’s contact force, expressed in pad local frame
+        // [2]      Contact normal y                            -1.0 <= x <= 1.0        }
+        // [3]      Contact normal z                            -1.0 <= x <= 1.0        }
+        // [4]      Contact force magnitude normalised          0.0  <= x <= 1.0        Gives grip strength cue
+        // [5]      Contact depth                               0.0  <= x <= 1.0        How deep the contact is (normalized)
+        // [6]      Relative velocity along normal normalised   -1.0 <= x <= 1.0        How fast the pad is sliding/compressing (helps with stick vs slip)
+        // [7]      Pad position relative to target             0.0  <= x <= 1.0        Distance of pad center to target surface (if no contact yet)
         //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

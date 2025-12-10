@@ -25,14 +25,12 @@ This is a solo learning project focused on:
 
 Project Scope:
 --------------
-CURRENT PHASE: "Approach and Hover" behavior
+CURRENT PHASE: "Approach and Capture" behavior
 - Agent learns to approach target object
-- Maintain stable hover at ~1.0 Unity unit distance
-- Match angular velocity with target
+- Maintain stable hover at ~1.5 Unity unit distance
+- Match angular velocity with target in a common reference frame
 - Align satellite orientation (+Y axis toward target)
 - Minimize fuel consumption and excessive movement
-
-FUTURE PHASES: (Not yet implemented)
 - Grasping behavior (using gripper pads)
 - Debris stabilization (damping target rotation)
 - Safe capture and retrieval

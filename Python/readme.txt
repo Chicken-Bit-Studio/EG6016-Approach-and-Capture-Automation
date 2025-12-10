@@ -5,7 +5,7 @@ UNITY-PYTHON REINFORCEMENT LEARNING PIPELINE
 A modular, maintainable framework for training reinforcement learning agents
 in Unity environments using Stable-Baselines3.
 
-Author: [Your Name]
+Author: Ben Searle
 Version: 2.0
 Last Updated: November 2025
 

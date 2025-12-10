@@ -88,7 +88,6 @@ public class EnvironmentController : MonoBehaviour
                 targetStartingRotation != Quaternion.identity
             ;
         }
-
     }
     [Serializable]
     public class EpisodeSettings

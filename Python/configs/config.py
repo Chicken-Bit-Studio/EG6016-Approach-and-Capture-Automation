@@ -71,7 +71,7 @@ class PPO:
     """Proximal Policy Optimization (PPO) hyperparameters."""
     
     # Training scale
-    TOTAL_TIMESTEPS = 1_000_000
+    TOTAL_TIMESTEPS = 6_000_000
     """Total environment steps for training session."""
     
     # Model architecture
