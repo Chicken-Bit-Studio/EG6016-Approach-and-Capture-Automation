@@ -1,10 +1,10 @@
 Best Model Information
 ==================================================
-Run ID: run_20251209_233346
-Timesteps: 124,474
-Episodes Completed: 28
-Mean Reward: 4144.21
-Saved At: 2025-12-10 00:10:42
+Run ID: run_20251210_050535
+Timesteps: 30,393
+Episodes Completed: 7
+Mean Reward: 17642.46
+Saved At: 2025-12-10 05:10:16
 
 Hyperparameters:
   learning_rate: 0.0003

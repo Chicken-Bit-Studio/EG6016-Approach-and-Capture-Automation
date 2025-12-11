@@ -1,8 +1,8 @@
-2025-12-01 23:23:55 [INFO] Logging initialized for ppo - Run ID: run_20251201_232355
-2025-12-01 23:23:55 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251201_232355\session_log.txt
-2025-12-01 23:24:03 [INFO] Configuring PPO model
-2025-12-01 23:24:12 [INFO] Beginning training for 1,000,000 timesteps
-2025-12-01 23:47:38 [ERROR] Connection lost during training: Connection lost during reset: timed out
+2025-12-10 05:05:35 [INFO] Logging initialized for ppo - Run ID: run_20251210_050535
+2025-12-10 05:05:35 [INFO] Session log: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251210_050535\session_log.txt
+2025-12-10 05:05:44 [INFO] Configuring PPO model
+2025-12-10 05:05:55 [INFO] Beginning training for 6,000,000 timesteps
+2025-12-10 10:31:59 [ERROR] Connection lost during training: Connection lost during reset: timed out
 Traceback (most recent call last):
   File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 234, in send_action
     resp_len = struct.unpack("<i", self._recvall(4))[0]
@@ -36,7 +36,7 @@ TimeoutError: timed out
 During handling of the above exception, another exception occurred:
 
 Traceback (most recent call last):
-  File "c:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\train_ppo.py", line 355, in main
+  File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\train_ppo.py", line 353, in main
     model.learn(
   File "C:\Users\bense\AppData\Local\Programs\Python\Python312\Lib\site-packages\stable_baselines3\ppo\ppo.py", line 311, in learn
     return super().learn(
@@ -63,5 +63,5 @@ Traceback (most recent call last):
   File "C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\environments\unity_socket_client.py", line 198, in send_reset
     raise ConnectionError(f"Connection lost during reset: {e}")
 ConnectionError: Connection lost during reset: timed out
-2025-12-01 23:47:39 [INFO] Final model saved: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251201_232355\final_model.zip
-2025-12-01 23:47:39 [INFO] Training session complete. Duration: 00h 23m 43s
+2025-12-10 10:31:59 [INFO] Final model saved: C:\Users\bense\Documents\GitHub\EG6016-Approach-and-Capture-Automation\Python\algorithms\ppo\LogsAndVisualisations\run_20251210_050535\final_model.zip
+2025-12-10 10:31:59 [INFO] Training session complete. Duration: 05h 26m 24s
